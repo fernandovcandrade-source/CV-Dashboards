@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Côrtes Velloso — Painel de Gestão</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── TOKENS ─────────────────────────────────────────────────────── */
+:root {
+  --navy:  #0c1528;
+  --navy2: #131f38;
+  --navy3: #1a2744;
+  --navy4: #213256;
+  --navy5: #2d4275;
+  --gold:  #c4a35a;
+  --gold2: #d4b86a;
+  --gold3: #e8d08e;
+  --gold-bg: rgba(196,163,90,.10);
+  --gold-bd: rgba(196,163,90,.25);
+  --white: #ffffff;
+  --off:   #f5f6f9;
+  --g1:    #eef0f5;
+  --g2:    #dde1ea;
+  --g4:    #8b95aa;
+  --g6:    #4f5a6e;
+  --g9:    #1a202c;
+  --green: #27ae60;
+  --red:   #c0392b;
+  --rs: 12px; --r: 16px; --rl: 22px;
+  --sh:  0 2px 8px  rgba(12,21,40,.07);
+  --sh2: 0 8px 28px rgba(12,21,40,.13);
+  --sh3: 0 20px 60px rgba(12,21,40,.20);
+  --tr: .2s ease;
+}
+
+/* ── RESET ──────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--off);
+  color: var(--g9);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── HEADER ─────────────────────────────────────────────────────── */
+.hdr {
+  background: var(--navy);
+  background-image:
+    radial-gradient(ellipse at 15% 60%, rgba(196,163,90,.09) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 20%, rgba(45,66,117,.5)   0%, transparent 50%);
+  padding: 0 40px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(196,163,90,.2);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.brand { display: flex; align-items: center; gap: 16px; }
+.brand-ico { width: 40px; height: 40px; flex-shrink: 0; }
+.brand-name { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--white); letter-spacing: .3px; }
+.brand-tag  { font-size: 10px; color: var(--gold); letter-spacing: 1.4px; text-transform: uppercase; font-weight: 500; margin-top: 1px; }
+
+
+
+/* ── HERO ───────────────────────────────────────────────────────── */
+.hero {
+  background: var(--navy3);
+  background-image: radial-gradient(ellipse at 70% 50%, rgba(196,163,90,.07) 0%, transparent 60%);
+  padding: 48px 40px 40px;
+  border-bottom: 1px solid rgba(196,163,90,.15);
+}
+
+.hero-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+
+.hero-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 34px;
+  color: var(--white);
+  line-height: 1.2;
+  margin-bottom: 8px;
+  letter-spacing: .2px;
+}
+
+.hero-sub {
+  font-size: 14px;
+  color: rgba(255,255,255,.45);
+  font-weight: 400;
+}
+
+/* ── MAIN ───────────────────────────────────────────────────────── */
+.main { padding: 36px 40px 60px; max-width: 1200px; margin: 0 auto; }
+
+/* ── SECTION LABELS ─────────────────────────────────────────────── */
+.section-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--g4);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--g2);
+}
+
+/* ── DESTAQUES CARD ─────────────────────────────────────────────── */
+.destaques-card {
+  background: var(--white);
+  border-radius: var(--rl);
+  border: 1px solid var(--g2);
+  box-shadow: var(--sh);
+  overflow: hidden;
+  margin-bottom: 40px;
+}
+
+.destaques-head {
+  background: var(--navy3);
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.destaques-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--white);
+}
+
+.destaques-title-dot {
+  width: 8px; height: 8px;
+  background: var(--gold);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.destaques-actions { display: flex; align-items: center; gap: 10px; }
+
+.btn-edit {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px;
+  background: rgba(196,163,90,.15);
+  color: var(--gold2);
+  border: 1px solid rgba(196,163,90,.3);
+  border-radius: 8px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px; font-weight: 600;
+  cursor: pointer;
+  transition: var(--tr);
+}
+.btn-edit:hover { background: rgba(196,163,90,.25); border-color: var(--gold); }
+
+.btn-save {
+  display: none; align-items: center; gap: 6px;
+  padding: 6px 14px;
+  background: var(--gold);
+  color: var(--navy);
+  border: none;
+  border-radius: 8px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px; font-weight: 700;
+  cursor: pointer;
+  transition: var(--tr);
+}
+.btn-save:hover { background: var(--gold2); }
+.btn-save.show { display: inline-flex; }
+
+.save-msg {
+  font-size: 11px;
+  color: var(--gold);
+  opacity: 0;
+  transition: opacity .4s;
+}
+.save-msg.show { opacity: 1; }
+
+.destaques-body { padding: 24px; min-height: 160px; position: relative; }
+
+/* Área editável */
+.destaques-content {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--g6);
+  min-height: 120px;
+  outline: none;
+  border-radius: 8px;
+  transition: background var(--tr), padding var(--tr);
+}
+
+.destaques-content[contenteditable="true"] {
+  background: var(--off);
+  padding: 14px 16px;
+  border: 1.5px dashed var(--gold-bd);
+  cursor: text;
+  color: var(--g9);
+}
+
+.destaques-content[contenteditable="true"]:focus {
+  border-color: var(--gold);
+  background: var(--white);
+}
+
+/* Placeholder quando vazio */
+.destaques-content:empty::before {
+  content: attr(data-placeholder);
+  color: var(--g4);
+  pointer-events: none;
+  font-style: italic;
+}
+
+/* Formatação do conteúdo */
+.destaques-content ul, .destaques-content ol {
+  padding-left: 20px;
+  margin: 8px 0;
+}
+.destaques-content li { margin: 4px 0; }
+.destaques-content strong { color: var(--g9); font-weight: 600; }
+.destaques-content .tag-atencao {
+  display: inline-block;
+  padding: 1px 8px;
+  background: rgba(192,57,43,.1);
+  color: var(--red);
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .3px;
+  text-transform: uppercase;
+}
+.destaques-content .tag-ok {
+  display: inline-block;
+  padding: 1px 8px;
+  background: rgba(39,174,96,.1);
+  color: var(--green);
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .3px;
+  text-transform: uppercase;
+}
+
+/* Toolbar de formatação */
+.fmt-toolbar {
+  display: none;
+  gap: 4px;
+  padding: 8px 24px 0;
+  flex-wrap: wrap;
+}
+.fmt-toolbar.show { display: flex; }
+.fmt-btn {
+  padding: 4px 10px;
+  background: var(--off);
+  border: 1px solid var(--g2);
+  border-radius: 5px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: var(--tr);
+  color: var(--g6);
+}
+.fmt-btn:hover { background: var(--g1); border-color: var(--g4); color: var(--g9); }
+.fmt-btn b { font-weight: 700; }
+
+.base-ref {
+  font-size: 11px;
+  color: var(--g4);
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── MENU CARDS ─────────────────────────────────────────────────── */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.nav-card {
+  background: var(--white);
+  border-radius: var(--rl);
+  border: 1px solid var(--g2);
+  box-shadow: var(--sh);
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  transition: transform var(--tr), box-shadow var(--tr), border-color var(--tr);
+  cursor: pointer;
+  position: relative;
+}
+
+.nav-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--sh2);
+  border-color: var(--gold-bd);
+}
+
+/* Linha colorida no topo */
+.nav-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.card-c1::before { background: linear-gradient(90deg, var(--navy3), var(--navy5)); }
+.card-c2::before { background: linear-gradient(90deg, var(--gold), var(--gold3)); }
+.card-c3::before { background: linear-gradient(90deg, #27ae60, #2ecc71); }
+.card-c4::before { background: linear-gradient(90deg, #8e44ad, #9b59b6); }
+.card-c5::before { background: linear-gradient(90deg, #2980b9, #3498db); }
+
+.card-body {
+  padding: 26px 24px 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.card-icon-wrap {
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  margin-bottom: 16px;
+  flex-shrink: 0;
+}
+.ic1 { background: rgba(26,39,68,.08); }
+.ic2 { background: rgba(196,163,90,.12); }
+.ic3 { background: rgba(39,174,96,.10); }
+.ic4 { background: rgba(142,68,173,.10); }
+.ic5 { background: rgba(41,128,185,.10); }
+.ic6 { background: rgba(39,174,96,.08); }
+.card-c6::before { background: linear-gradient(90deg, #16a085, #1abc9c); }
+
+.card-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--g4);
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+
+.card-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 18px;
+  color: var(--g9);
+  line-height: 1.25;
+  margin-bottom: 10px;
+}
+
+.card-desc {
+  font-size: 12.5px;
+  color: var(--g4);
+  line-height: 1.6;
+  flex: 1;
+}
+
+.card-footer {
+  padding: 14px 24px;
+  border-top: 1px solid var(--g1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-status {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 99px;
+  letter-spacing: .3px;
+}
+.status-ok  { background: rgba(39,174,96,.1);  color: #27ae60; }
+.status-wip { background: rgba(196,163,90,.15); color: #9a7a2e; }
+.status-new { background: rgba(41,128,185,.1);  color: #2980b9; }
+
+.card-arrow {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--g1);
+  border: 1px solid var(--g2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+  color: var(--g4);
+  transition: var(--tr);
+}
+.nav-card:hover .card-arrow {
+  background: var(--navy3);
+  border-color: var(--navy3);
+  color: var(--white);
+  transform: translateX(2px);
+}
+
+/* ── FOOTER ─────────────────────────────────────────────────────── */
+.card-date {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--g4);
+  cursor: pointer;
+  padding: 3px 10px;
+  border-radius: 99px;
+  border: 1px dashed var(--g2);
+  transition: var(--tr);
+  white-space: nowrap;
+}
+.card-date:hover { border-color: var(--gold); color: var(--gold); }
+
+
+.footer {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--g2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.footer-brand {
+  font-family: 'DM Serif Display', serif;
+  font-size: 13px;
+  color: var(--g4);
+}
+
+.footer-note {
+  font-size: 11px;
+  color: var(--g4);
+  font-family: 'DM Mono', monospace;
+}
+
+/* ── RESPONSIVE ─────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .hdr   { padding: 0 20px; height: 64px; }
+  .hero  { padding: 32px 20px 28px; }
+  .hero-title { font-size: 26px; }
+  .main  { padding: 24px 20px 40px; }
+  .cards-grid { grid-template-columns: 1fr; }
+  .hdr-meta { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="brand">
+    <svg class="brand-ico" viewBox="0 0 40 40" fill="none">
+      <rect width="40" height="40" rx="9" fill="#1a2744"/>
+      <path d="M20 7L33 18V34H26V25H14V34H7V18L20 7Z"
+            stroke="#c4a35a" stroke-width="1.5" fill="none" stroke-linejoin="round"/>
+      <line x1="14" y1="25" x2="26" y2="25" stroke="#c4a35a" stroke-width="1.5"/>
+    </svg>
+    <div>
+      <div class="brand-name">Côrtes Velloso</div>
+      <div class="brand-tag">Empreendimentos Imobiliários · Est. 2009</div>
+    </div>
+  </div>
+
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">Painel de Gestão</div>
+  <div class="hero-title">Visão Geral Cortes Velloso</div>
+  <div class="hero-sub">Côrtes Velloso Empreendimentos Imobiliários · Uso interno</div>
+</div>
+
+<main class="main">
+
+  <!-- DESTAQUES -->
+  <div class="section-label">✦ Destaques do Mês</div>
+
+  <div class="destaques-card">
+    <div class="destaques-head">
+      <div class="destaques-title">
+        <div class="destaques-title-dot"></div>
+        Destaques, Pontos de Atenção & Resumo Executivo
+      </div>
+      <div class="destaques-actions">
+        <span class="save-msg" id="saveMsg">✓ Salvo</span>
+        <button class="btn-edit" id="btnEdit" onclick="toggleEdit()">✏️ Editar</button>
+        <button class="btn-save" id="btnSave" onclick="saveContent()">💾 Salvar</button>
+      </div>
+    </div>
+
+    <!-- Barra de formatação (visível ao editar) -->
+    <div class="fmt-toolbar" id="fmtToolbar">
+      <button class="fmt-btn" onclick="fmt('bold')"><b>N</b></button>
+      <button class="fmt-btn" onclick="fmt('italic')"><i>I</i></button>
+      <button class="fmt-btn" onclick="fmtList()">☰ Lista</button>
+      <button class="fmt-btn" onclick="fmtTag('atencao')">⚠ Atenção</button>
+      <button class="fmt-btn" onclick="fmtTag('ok')">✓ OK</button>
+      <button class="fmt-btn" onclick="clearFmt()" style="margin-left:8px;color:var(--red)">✕ Limpar tudo</button>
+    </div>
+
+    <div class="destaques-body">
+      <div
+        class="destaques-content"
+        id="destContent"
+        contenteditable="false"
+        data-placeholder="Clique em 'Editar' para adicionar os destaques do mês, pontos de atenção e observações relevantes..."
+      ></div>
+      <div class="base-ref">
+        <span>💾</span>
+        <span>O conteúdo é salvo automaticamente neste navegador. Para preservar entre dispositivos, copie o texto antes de sair.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MENU -->
+  <div class="section-label">☰ Navegação — Módulos do Painel</div>
+
+  <div class="cards-grid">
+
+    <!-- 1. Status Loteamentos -->
+    <a class="nav-card card-c1"
+       href="LINK_STATUS_LOTEAMENTOS"
+       id="link-status"
+       onclick="navTo(event,'link-status')">
+      <div class="card-body">
+        <div class="card-icon-wrap ic1">🗺️</div>
+        <div class="card-title">Status Loteamentos</div>
+        <div class="card-desc">
+          Visão consolidada dos lotes — vendidos, disponíveis, quitados, distratos e cessões.
+          Acompanhamento por empreendimento (ESTA e FAZE).
+        </div>
+      </div>
+      <div class="card-footer">
+        <span class="card-date" id="date-status" onclick="editDate('status',event)" title="Clique para editar">Atualizar base</span>
+        <div class="card-arrow">→</div>
+      </div>
+    </a>
+
+    <!-- 2. Fluxo de Caixa -->
+    <a class="nav-card card-c2"
+       href="LINK_FLUXO_CAIXA"
+       id="link-fluxo"
+       onclick="navTo(event,'link-fluxo')">
+      <div class="card-body">
+        <div class="card-icon-wrap ic2">📊</div>
+        <div class="card-title">Fluxo de Caixa Loteamentos</div>
+        <div class="card-desc">
+          Receitas, despesas e resultado líquido de ESTA e FAZE.
+          Análise mensal com filtros por empreendimento e período.
+        </div>
+      </div>
+      <div class="card-footer">
+        <span class="card-date" id="date-fluxo" onclick="editDate('fluxo',event)" title="Clique para editar">Atualizar base</span>
+        <div class="card-arrow">→</div>
+      </div>
+    </a>
+
+    <!-- 3. Recebimentos -->
+    <a class="nav-card card-c3"
+       href="LINK_RECEBIMENTOS"
+       id="link-rec"
+       onclick="navTo(event,'link-rec')">
+      <div class="card-body">
+        <div class="card-icon-wrap ic3">💰</div>
+        <div class="card-title">Recebimentos Loteamentos</div>
+        <div class="card-desc">
+          Histórico de recebíveis, composição das parcelas, inadimplência
+          e comparativo previsto vs. realizado.
+        </div>
+      </div>
+      <div class="card-footer">
+        <span class="card-date" id="date-rec" onclick="editDate('rec',event)" title="Clique para editar">Atualizar base</span>
+        <div class="card-arrow">→</div>
+      </div>
+    </a>
+
+    <!-- 4. Patrimônio Líquido -->
+    <a class="nav-card card-c4"
+       href="LINK_PATRIMONIO"
+       id="link-pat"
+       onclick="navTo(event,'link-pat')">
+      <div class="card-body">
+        <div class="card-icon-wrap ic4">📈</div>
+        <div class="card-title">Patrimônio Líquido CV</div>
+        <div class="card-desc">
+          Evolução do patrimônio financeiro, composição onshore e offshore,
+          rendimentos e aplicações financeiras.
+        </div>
+      </div>
+      <div class="card-footer">
+        <span class="card-date" id="date-pat" onclick="editDate('pat',event)" title="Clique para editar">Atualizar base</span>
+        <div class="card-arrow">→</div>
+      </div>
+    </a>
+
+    <!-- 5. Infraestrutura Antecipada -->
+    <a class="nav-card card-c5"
+       href="LINK_INFRAESTRUTURA"
+       id="link-infra"
+       onclick="navTo(event,'link-infra')">
+      <div class="card-body">
+        <div class="card-icon-wrap ic5">🏗️</div>
+        <div class="card-title">Infraestrutura Antecipada</div>
+        <div class="card-desc">
+          Acompanhamento do adiantamento concedido à FTA — parcelas pagas,
+          saldo recebido e evolução das 120 parcelas mensais.
+        </div>
+      </div>
+      <div class="card-footer">
+        <span class="card-date" id="date-infra" onclick="editDate('infra',event)" title="Clique para editar">Atualizar base</span>
+        <div class="card-arrow">→</div>
+      </div>
+    </a>
+
+
+    <!-- 6. Demais Assuntos -->
+    <a class="nav-card card-c6"
+       href="LINK_OUTROS"
+       id="link-outros"
+       onclick="navTo(event,'link-outros')">
+      <div class="card-body">
+        <div class="card-icon-wrap ic6">📝</div>
+        <div class="card-title">Demais Assuntos</div>
+        <div class="card-desc">
+          Espaço livre para registrar observações, pendências,
+          recados e outros assuntos relevantes do período.
+        </div>
+      </div>
+      <div class="card-footer">
+        <span class="card-date" id="date-outros" onclick="editDate('outros',event)" title="Clique para editar">Definir base</span>
+        <div class="card-arrow">→</div>
+      </div>
+    </a>
+
+  </div><!-- /cards-grid -->
+
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-brand">Côrtes Velloso Empreendimentos Imobiliários</div>
+    <div class="footer-note" id="footerNote">—</div>
+  </div>
+
+</main>
+
+<script>
+// ================================================================
+// ⚙️  LINKS — substitua pelos URLs reais das páginas do Google Sites
+// ================================================================
+const LINKS = {
+  'link-status': 'COLE_AQUI_O_LINK_DA_PAGINA_STATUS_LOTEAMENTOS',
+  'link-fluxo':  'COLE_AQUI_O_LINK_DA_PAGINA_FLUXO_CAIXA',
+  'link-rec':    'COLE_AQUI_O_LINK_DA_PAGINA_RECEBIMENTOS',
+  'link-pat':    'COLE_AQUI_O_LINK_DA_PAGINA_PATRIMONIO',
+  'link-infra':  'COLE_AQUI_O_LINK_DA_PAGINA_INFRAESTRUTURA',
+  'link-outros': 'COLE_AQUI_O_LINK_DA_PAGINA_DEMAIS_ASSUNTOS'
+};
+
+// ── Inicialização ────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  // Footer note
+  const hoje = new Date();
+  document.getElementById('footerNote').textContent =
+    `Gerado em ${hoje.toLocaleDateString('pt-BR')}`;
+
+  // Carrega datas salvas de cada card
+  ['status','fluxo','rec','pat','infra','outros'].forEach(key => {
+    const saved = localStorage.getItem('cv_date_'+key);
+    const el = document.getElementById('date-'+key);
+    if (el) el.textContent = saved || 'Definir base';
+  });
+
+
+  // Carrega conteúdo salvo dos destaques
+  const saved = localStorage.getItem('cv_destaques');
+  if (saved) {
+    document.getElementById('destContent').innerHTML = saved;
+  }
+
+  // Aplica links nos cards
+  Object.entries(LINKS).forEach(([id, url]) => {
+    const el = document.getElementById(id);
+    if (el && !url.startsWith('COLE_AQUI')) el.href = url;
+  });
+});
+
+// ── Navegação dos cards ──────────────────────────────────────────
+function navTo(e, cardId) {
+  const url = LINKS[cardId];
+  if (!url || url.startsWith('COLE_AQUI')) {
+    e.preventDefault();
+    // Mostra toast de link não configurado
+    showToast('Link ainda não configurado. Edite a seção LINKS no código.');
+  }
+  // Se tiver URL válida, deixa o link funcionar normalmente
+}
+
+// ── Edição dos destaques ─────────────────────────────────────────
+let editing = false;
+
+function toggleEdit() {
+  editing = !editing;
+  const el    = document.getElementById('destContent');
+  const btnE  = document.getElementById('btnEdit');
+  const btnS  = document.getElementById('btnSave');
+  const tbar  = document.getElementById('fmtToolbar');
+
+  el.contentEditable = editing ? 'true' : 'false';
+  btnE.style.display  = editing ? 'none'  : 'inline-flex';
+  btnS.classList.toggle('show', editing);
+  tbar.classList.toggle('show', editing);
+
+  if (editing) {
+    el.focus();
+    // Coloca cursor no final
+    const range = document.createRange();
+    const sel = window.getSelection();
+    range.selectNodeContents(el);
+    range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+}
+
+function saveContent() {
+  const el = document.getElementById('destContent');
+  localStorage.setItem('cv_destaques', el.innerHTML);
+  editing = false;
+  el.contentEditable = 'false';
+  document.getElementById('btnEdit').style.display = 'inline-flex';
+  document.getElementById('btnSave').classList.remove('show');
+  document.getElementById('fmtToolbar').classList.remove('show');
+
+  // Feedback visual
+  const msg = document.getElementById('saveMsg');
+  msg.classList.add('show');
+  setTimeout(() => msg.classList.remove('show'), 2500);
+}
+
+// Salva automaticamente ao sair da edição (Esc)
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && editing) saveContent();
+});
+
+// ── Formatação do texto ──────────────────────────────────────────
+function fmt(cmd) { document.execCommand(cmd, false, null); }
+
+function fmtList() {
+  document.execCommand('insertUnorderedList', false, null);
+}
+
+function fmtTag(tipo) {
+  const sel = window.getSelection();
+  if (!sel.rangeCount) return;
+  const range = sel.getRangeAt(0);
+  const span = document.createElement('span');
+  span.className = `tag-${tipo}`;
+  span.textContent = tipo === 'atencao' ? '⚠ Atenção' : '✓ OK';
+  range.insertNode(span);
+  // Move cursor para após o span
+  range.setStartAfter(span);
+  range.setEndAfter(span);
+  sel.removeAllRanges();
+  sel.addRange(range);
+  document.getElementById('destContent').dispatchEvent(new Event('input'));
+}
+
+function clearFmt() {
+  if (confirm('Limpar todo o conteúdo dos destaques?')) {
+    document.getElementById('destContent').innerHTML = '';
+    localStorage.removeItem('cv_destaques');
+  }
+}
+
+// ── Data editável nos cards ──────────────────────────────────────
+function editDate(key, e) {
+  e.preventDefault(); e.stopPropagation();
+  const el = document.getElementById('date-'+key);
+  const current = el.textContent;
+  const val = prompt('Informe a base de atualização (ex: Fevereiro 2026):', current === 'Definir base' ? '' : current);
+  if (val !== null) {
+    const txt = val.trim() ? 'Base '+val.trim() : 'Definir base';
+    el.textContent = txt;
+    localStorage.setItem('cv_date_'+key, txt);
+  }
+}
+
+
+// ── Toast de notificação ─────────────────────────────────────────
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.style.cssText = `
+    position:fixed;bottom:28px;left:50%;transform:translateX(-50%);
+    background:#0c1528;color:#fff;padding:12px 22px;border-radius:10px;
+    font-family:'Outfit',sans-serif;font-size:13px;z-index:9999;
+    box-shadow:0 8px 24px rgba(0,0,0,.25);border:1px solid rgba(196,163,90,.3);
+    animation:fadeIn .2s ease;
+  `;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+</script>
+
+</body>
+</html>

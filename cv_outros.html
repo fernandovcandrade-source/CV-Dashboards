@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Côrtes Velloso — Demais Assuntos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:  #0c1528; --navy2: #131f38; --navy3: #1a2744;
+  --gold:  #c4a35a; --gold2: #d4b86a; --gold-bg: rgba(196,163,90,.10); --gold-bd: rgba(196,163,90,.25);
+  --white: #fff; --off: #f5f6f9; --g1: #eef0f5; --g2: #dde1ea;
+  --g4: #8b95aa; --g6: #4f5a6e; --g9: #1a202c;
+  --green: #27ae60; --red: #c0392b;
+  --r: 16px; --rl: 22px; --rs: 12px;
+  --sh: 0 2px 8px rgba(12,21,40,.07); --sh2: 0 8px 28px rgba(12,21,40,.13);
+  --tr: .2s ease;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Outfit', sans-serif; background: var(--off); color: var(--g9); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+/* HEADER */
+.hdr { background: var(--navy); background-image: radial-gradient(ellipse at 15% 60%, rgba(196,163,90,.09) 0%, transparent 55%); padding: 0 40px; height: 72px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(196,163,90,.2); position: sticky; top: 0; z-index: 100; }
+.brand { display: flex; align-items: center; gap: 16px; }
+.brand-ico { width: 40px; height: 40px; }
+.brand-name { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--white); }
+.brand-tag  { font-size: 10px; color: var(--gold); letter-spacing: 1.4px; text-transform: uppercase; font-weight: 500; margin-top: 1px; }
+.hdr-right { display: flex; align-items: center; gap: 12px; }
+.btn-back { display: flex; align-items: center; gap: 7px; padding: 7px 16px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.7); border: 1px solid rgba(255,255,255,.15); border-radius: var(--rs); font-family: 'Outfit', sans-serif; font-size: 12.5px; font-weight: 500; cursor: pointer; text-decoration: none; transition: var(--tr); }
+.btn-back:hover { background: rgba(255,255,255,.14); color: #fff; }
+
+/* HERO */
+.hero { background: var(--navy3); padding: 40px 40px 32px; border-bottom: 1px solid rgba(196,163,90,.15); }
+.hero-eye { font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+.hero-title { font-family: 'DM Serif Display', serif; font-size: 30px; color: var(--white); line-height: 1.2; }
+.hero-sub { font-size: 13px; color: rgba(255,255,255,.4); margin-top: 6px; }
+
+/* MAIN */
+.main { padding: 36px 40px 60px; max-width: 960px; margin: 0 auto; }
+
+/* EDITOR CARD */
+.editor-card { background: var(--white); border-radius: var(--rl); border: 1px solid var(--g2); box-shadow: var(--sh); overflow: hidden; }
+.editor-head { background: var(--navy3); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
+.editor-title { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; color: var(--white); }
+.editor-dot { width: 8px; height: 8px; background: #1abc9c; border-radius: 50%; }
+.editor-actions { display: flex; align-items: center; gap: 10px; }
+
+.btn-edit { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: rgba(196,163,90,.15); color: var(--gold2); border: 1px solid rgba(196,163,90,.3); border-radius: 8px; font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; transition: var(--tr); }
+.btn-edit:hover { background: rgba(196,163,90,.25); }
+.btn-save { display: none; align-items: center; gap: 6px; padding: 6px 14px; background: var(--gold); color: var(--navy); border: none; border-radius: 8px; font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; transition: var(--tr); }
+.btn-save:hover { background: var(--gold2); }
+.btn-save.show { display: inline-flex; }
+.save-msg { font-size: 11px; color: var(--gold); opacity: 0; transition: opacity .4s; }
+.save-msg.show { opacity: 1; }
+
+/* TOOLBAR */
+.fmt-bar { display: none; gap: 4px; padding: 10px 24px 0; flex-wrap: wrap; border-bottom: 1px solid var(--g1); padding-bottom: 10px; }
+.fmt-bar.show { display: flex; }
+.fmt-btn { padding: 4px 10px; background: var(--off); border: 1px solid var(--g2); border-radius: 5px; font-family: 'Outfit', sans-serif; font-size: 11.5px; cursor: pointer; transition: var(--tr); color: var(--g6); }
+.fmt-btn:hover { background: var(--g1); color: var(--g9); }
+
+/* CONTENT AREA */
+.editor-body { padding: 28px; min-height: 420px; }
+.editor-content {
+  font-size: 14.5px; line-height: 1.85; color: var(--g6);
+  min-height: 360px; outline: none; border-radius: 8px;
+  transition: background var(--tr), padding var(--tr);
+}
+.editor-content[contenteditable="true"] {
+  background: var(--off); padding: 20px;
+  border: 1.5px dashed var(--gold-bd); cursor: text; color: var(--g9);
+}
+.editor-content[contenteditable="true"]:focus { border-color: var(--gold); background: var(--white); }
+.editor-content:empty::before {
+  content: attr(data-placeholder);
+  color: var(--g4); pointer-events: none; font-style: italic;
+}
+.editor-content ul, .editor-content ol { padding-left: 22px; margin: 8px 0; }
+.editor-content li { margin: 5px 0; }
+.editor-content h3 { font-family: 'DM Serif Display', serif; font-size: 17px; color: var(--g9); margin: 18px 0 8px; }
+.editor-content hr { border: none; border-top: 1px solid var(--g2); margin: 20px 0; }
+.editor-content strong { color: var(--g9); font-weight: 600; }
+.editor-content .tag-at { display: inline-block; padding: 1px 8px; background: rgba(192,57,43,.1); color: var(--red); border-radius: 4px; font-size: 11px; font-weight: 600; letter-spacing: .3px; text-transform: uppercase; }
+.editor-content .tag-ok { display: inline-block; padding: 1px 8px; background: rgba(39,174,96,.1); color: var(--green); border-radius: 4px; font-size: 11px; font-weight: 600; letter-spacing: .3px; text-transform: uppercase; }
+.editor-content .tag-pen { display: inline-block; padding: 1px 8px; background: rgba(196,163,90,.15); color: #9a7a2e; border-radius: 4px; font-size: 11px; font-weight: 600; letter-spacing: .3px; text-transform: uppercase; }
+
+/* FOOTER NOTE */
+.editor-footer { padding: 14px 28px; border-top: 1px solid var(--g1); display: flex; align-items: center; gap: 8px; }
+.editor-footer-note { font-size: 11px; color: var(--g4); }
+
+/* HISTORICO */
+.hist-card { background: var(--white); border-radius: var(--rl); border: 1px solid var(--g2); box-shadow: var(--sh); overflow: hidden; margin-top: 24px; }
+.hist-head { padding: 14px 24px; border-bottom: 1px solid var(--g1); display: flex; align-items: center; justify-content: space-between; }
+.hist-title { font-size: 13px; font-weight: 600; color: var(--g6); display: flex; align-items: center; gap: 8px; }
+.hist-title::before { content: ''; display: block; width: 3px; height: 14px; background: var(--gold); border-radius: 3px; }
+.btn-arch { padding: 5px 12px; background: var(--off); border: 1px solid var(--g2); border-radius: 6px; font-family: 'Outfit', sans-serif; font-size: 11.5px; color: var(--g6); cursor: pointer; transition: var(--tr); }
+.btn-arch:hover { border-color: var(--gold); color: var(--g9); }
+.hist-body { padding: 16px 24px; }
+.hist-item { padding: 12px 0; border-bottom: 1px solid var(--g1); display: flex; flex-direction: column; gap: 4px; }
+.hist-item:last-child { border-bottom: none; }
+.hist-date { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--g4); }
+.hist-preview { font-size: 12.5px; color: var(--g6); }
+.hist-empty { font-size: 12.5px; color: var(--g4); font-style: italic; padding: 8px 0; }
+.btn-restore { font-size: 11px; color: var(--gold); cursor: pointer; background: none; border: none; font-family: 'Outfit', sans-serif; padding: 0; }
+.btn-restore:hover { text-decoration: underline; }
+
+@media (max-width: 768px) {
+  .hdr, .hero, .main { padding-left: 20px; padding-right: 20px; }
+  .hero-title { font-size: 24px; }
+}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="brand">
+    <svg class="brand-ico" viewBox="0 0 40 40" fill="none">
+      <rect width="40" height="40" rx="9" fill="#1a2744"/>
+      <path d="M20 7L33 18V34H26V25H14V34H7V18L20 7Z" stroke="#c4a35a" stroke-width="1.5" fill="none" stroke-linejoin="round"/>
+      <line x1="14" y1="25" x2="26" y2="25" stroke="#c4a35a" stroke-width="1.5"/>
+    </svg>
+    <div>
+      <div class="brand-name">Côrtes Velloso</div>
+      <div class="brand-tag">Empreendimentos Imobiliários · Est. 2009</div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <!-- Substitua o href pelo link da página inicial do Google Sites -->
+    <a class="btn-back" href="LINK_PAGINA_INICIAL" id="linkBack">
+      ← Voltar ao Painel
+    </a>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="hero-eye">Painel de Gestão</div>
+  <div class="hero-title">Demais Assuntos</div>
+  <div class="hero-sub">Observações, pendências e assuntos diversos do período</div>
+</div>
+
+<main class="main">
+
+  <!-- EDITOR PRINCIPAL -->
+  <div class="editor-card">
+    <div class="editor-head">
+      <div class="editor-title">
+        <div class="editor-dot"></div>
+        Registro Livre
+      </div>
+      <div class="editor-actions">
+        <span class="save-msg" id="saveMsg">✓ Salvo</span>
+        <button class="btn-edit" id="btnEdit" onclick="toggleEdit()">✏️ Editar</button>
+        <button class="btn-save" id="btnSave" onclick="saveContent()">💾 Salvar</button>
+      </div>
+    </div>
+
+    <div class="fmt-bar" id="fmtBar">
+      <button class="fmt-btn" onclick="fmt('bold')"><b>Negrito</b></button>
+      <button class="fmt-btn" onclick="fmt('italic')"><i>Itálico</i></button>
+      <button class="fmt-btn" onclick="fmt('insertUnorderedList')">☰ Lista</button>
+      <button class="fmt-btn" onclick="insertSep()">── Separador</button>
+      <button class="fmt-btn" onclick="insertTag('at')">⚠ Atenção</button>
+      <button class="fmt-btn" onclick="insertTag('ok')">✓ OK</button>
+      <button class="fmt-btn" onclick="insertTag('pen')">⏳ Pendente</button>
+    </div>
+
+    <div class="editor-body">
+      <div
+        class="editor-content"
+        id="editorContent"
+        contenteditable="false"
+        data-placeholder="Clique em '✏️ Editar' para começar a escrever. Use este espaço para registrar observações do período, pendências, decisões tomadas, recados para a próxima reunião ou qualquer outro assunto relevante..."
+      ></div>
+    </div>
+
+    <div class="editor-footer">
+      <span>💾</span>
+      <span class="editor-footer-note" id="lastSaved">Nenhum conteúdo salvo ainda.</span>
+    </div>
+  </div>
+
+  <!-- HISTÓRICO -->
+  <div class="hist-card">
+    <div class="hist-head">
+      <div class="hist-title">Histórico de Registros</div>
+      <button class="btn-arch" onclick="arquivar()">📁 Arquivar mês atual</button>
+    </div>
+    <div class="hist-body" id="histBody">
+      <div class="hist-empty">Nenhum registro arquivado ainda. Clique em "Arquivar mês atual" para salvar uma cópia do conteúdo atual no histórico.</div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ── Estado ───────────────────────────────────────────────────────
+let editing = false;
+
+// ── Inicialização ────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  // Carrega conteúdo salvo
+  const saved = localStorage.getItem('cv_outros_content');
+  const ts    = localStorage.getItem('cv_outros_ts');
+  if (saved) {
+    document.getElementById('editorContent').innerHTML = saved;
+    document.getElementById('lastSaved').textContent =
+      'Último salvamento: ' + ts;
+  }
+  renderHistorico();
+});
+
+// ── Edição ───────────────────────────────────────────────────────
+function toggleEdit() {
+  editing = !editing;
+  const el   = document.getElementById('editorContent');
+  const btnE = document.getElementById('btnEdit');
+  const btnS = document.getElementById('btnSave');
+  const bar  = document.getElementById('fmtBar');
+
+  el.contentEditable = editing ? 'true' : 'false';
+  btnE.style.display = editing ? 'none' : 'inline-flex';
+  btnS.classList.toggle('show', editing);
+  bar.classList.toggle('show', editing);
+
+  if (editing) {
+    el.focus();
+    const r = document.createRange(), s = window.getSelection();
+    r.selectNodeContents(el); r.collapse(false);
+    s.removeAllRanges(); s.addRange(r);
+  }
+}
+
+function saveContent() {
+  const el = document.getElementById('editorContent');
+  const ts = new Date().toLocaleString('pt-BR');
+  localStorage.setItem('cv_outros_content', el.innerHTML);
+  localStorage.setItem('cv_outros_ts', ts);
+
+  editing = false;
+  el.contentEditable = 'false';
+  document.getElementById('btnEdit').style.display = 'inline-flex';
+  document.getElementById('btnSave').classList.remove('show');
+  document.getElementById('fmtBar').classList.remove('show');
+  document.getElementById('lastSaved').textContent = 'Último salvamento: ' + ts;
+
+  const msg = document.getElementById('saveMsg');
+  msg.classList.add('show');
+  setTimeout(() => msg.classList.remove('show'), 2500);
+}
+
+// Salva com Esc
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && editing) saveContent();
+});
+
+// ── Formatação ───────────────────────────────────────────────────
+function fmt(cmd) { document.execCommand(cmd, false, null); }
+
+function insertSep() {
+  document.execCommand('insertHTML', false, '<hr>');
+}
+
+function insertTag(tipo) {
+  const labels = { at: '⚠ Atenção', ok: '✓ OK', pen: '⏳ Pendente' };
+  document.execCommand('insertHTML', false,
+    `<span class="tag-${tipo}">${labels[tipo]}</span>&nbsp;`
+  );
+}
+
+// ── Histórico ────────────────────────────────────────────────────
+function arquivar() {
+  const el = document.getElementById('editorContent');
+  if (!el.innerHTML.trim()) {
+    alert('Não há conteúdo para arquivar.');
+    return;
+  }
+
+  const hoje = new Date();
+  const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                 'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const ref = `${MESES[hoje.getMonth()]} ${hoje.getFullYear()}`;
+
+  if (!confirm(`Arquivar o conteúdo atual como "${ref}"?`)) return;
+
+  const hist = JSON.parse(localStorage.getItem('cv_outros_hist') || '[]');
+
+  // Evita duplicatas do mesmo mês
+  const idx = hist.findIndex(h => h.ref === ref);
+  if (idx >= 0) {
+    if (!confirm(`Já existe um registro para ${ref}. Substituir?`)) return;
+    hist.splice(idx, 1);
+  }
+
+  hist.unshift({
+    ref,
+    ts: new Date().toLocaleString('pt-BR'),
+    content: el.innerHTML,
+    preview: el.innerText.slice(0, 120).trim()
+  });
+
+  // Mantém últimos 12 registros
+  if (hist.length > 12) hist.pop();
+
+  localStorage.setItem('cv_outros_hist', JSON.stringify(hist));
+  renderHistorico();
+  showToast(`✓ Arquivado como "${ref}"`);
+}
+
+function renderHistorico() {
+  const hist = JSON.parse(localStorage.getItem('cv_outros_hist') || '[]');
+  const el = document.getElementById('histBody');
+
+  if (!hist.length) {
+    el.innerHTML = '<div class="hist-empty">Nenhum registro arquivado ainda. Clique em "Arquivar mês atual" para salvar uma cópia do conteúdo atual no histórico.</div>';
+    return;
+  }
+
+  el.innerHTML = hist.map((h, i) => `
+    <div class="hist-item">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span class="hist-date">📅 ${h.ref} — salvo em ${h.ts}</span>
+        <button class="btn-restore" onclick="restaurar(${i})">↩ Restaurar</button>
+      </div>
+      <div class="hist-preview">${h.preview || '(sem texto)'}${h.preview && h.preview.length >= 120 ? '…' : ''}</div>
+    </div>
+  `).join('');
+}
+
+function restaurar(idx) {
+  const hist = JSON.parse(localStorage.getItem('cv_outros_hist') || '[]');
+  if (!hist[idx]) return;
+  if (!confirm(`Restaurar o conteúdo de "${hist[idx].ref}"? O conteúdo atual será substituído.`)) return;
+  document.getElementById('editorContent').innerHTML = hist[idx].content;
+  const ts = new Date().toLocaleString('pt-BR');
+  localStorage.setItem('cv_outros_content', hist[idx].content);
+  localStorage.setItem('cv_outros_ts', ts);
+  document.getElementById('lastSaved').textContent = 'Restaurado de ' + hist[idx].ref + ' em ' + ts;
+  showToast(`✓ Conteúdo de "${hist[idx].ref}" restaurado`);
+}
+
+// ── Toast ────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#0c1528;color:#fff;padding:12px 22px;border-radius:10px;font-family:Outfit,sans-serif;font-size:13px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.25);border:1px solid rgba(196,163,90,.3);';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+</script>
+
+</body>
+</html>

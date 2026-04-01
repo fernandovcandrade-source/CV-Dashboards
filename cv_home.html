@@ -676,7 +676,7 @@ const LINKS = {
   'link-rec':    'COLE_AQUI_O_LINK_DA_PAGINA_RECEBIMENTOS',
   'link-pat':    'COLE_AQUI_O_LINK_DA_PAGINA_PATRIMONIO',
   'link-infra':  'COLE_AQUI_O_LINK_DA_PAGINA_INFRAESTRUTURA',
-  'link-outros': 'COLE_AQUI_O_LINK_DA_PAGINA_DEMAIS_ASSUNTOS'
+  'link-outros': 'https://fernandovcandrade-source.github.io/CV-Dashboards/cv_outros.html'
 };
 
 // ── Inicialização ────────────────────────────────────────────────
@@ -712,10 +712,15 @@ function navTo(e, cardId) {
   const url = LINKS[cardId];
   if (!url || url.startsWith('COLE_AQUI')) {
     e.preventDefault();
-    // Mostra toast de link não configurado
     showToast('Link ainda não configurado. Edite a seção LINKS no código.');
+    return;
   }
-  // Se tiver URL válida, deixa o link funcionar normalmente
+  // Demais Assuntos abre em nova aba
+  if (cardId === 'link-outros') {
+    e.preventDefault();
+    window.open(url, '_blank');
+  }
+  // Demais cards navegam normalmente (página do Google Sites)
 }
 
 // ── Edição dos destaques ─────────────────────────────────────────

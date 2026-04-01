@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Côrtes Velloso — Fluxo de Caixa Loteamentos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #0c1528; --navy2: #131f38; --navy3: #1a2744; --navy4: #2d4275;
+  --gold: #c4a35a; --gold2: #d4b86a; --gold3: #e8d08e; --gold-bg: rgba(196,163,90,.1);
+  --white: #fff; --off: #f6f7f9; --gray1: #f0f2f6; --gray2: #dde1ea;
+  --gray4: #8b95aa; --gray6: #4f5a6e; --gray9: #1a202c;
+  --green: #27ae60; --red: #c0392b;
+  --r: 14px; --rs: 10px; --rx: 6px;
+  --sh: 0 1px 4px rgba(12,21,40,.08); --sh2: 0 4px 16px rgba(12,21,40,.12);
+  --tr: .18s ease;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Outfit', sans-serif; background: var(--off); color: var(--gray9); font-size: 13.5px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+
+/* HEADER */
+.hdr { background: var(--navy); background-image: radial-gradient(ellipse at 20% 50%, rgba(196,163,90,.08) 0%, transparent 60%); padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 68px; border-bottom: 1px solid rgba(196,163,90,.2); position: sticky; top: 0; z-index: 100; }
+.brand { display: flex; align-items: center; gap: 14px; }
+.brand-icon { width: 38px; height: 38px; flex-shrink: 0; }
+.brand-name { font-family: 'DM Serif Display', serif; font-size: 17px; color: var(--white); }
+.brand-tag  { font-size: 10.5px; color: var(--gold); letter-spacing: 1.2px; text-transform: uppercase; font-weight: 500; }
+.hdr-right  { display: flex; align-items: center; gap: 20px; }
+.upd-label  { font-size: 10px; color: rgba(255,255,255,.4); text-transform: uppercase; letter-spacing: .6px; }
+.upd-time   { font-size: 11.5px; color: rgba(255,255,255,.7); font-family: 'DM Mono', monospace; }
+.btn-ref { display: flex; align-items: center; gap: 7px; padding: 8px 18px; background: var(--gold); color: var(--navy); border: none; border-radius: var(--rs); font-family: 'Outfit', sans-serif; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: var(--tr); }
+.btn-ref:hover:not(:disabled) { background: var(--gold2); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(196,163,90,.35); }
+.btn-ref:disabled { opacity: .55; cursor: not-allowed; }
+.ico { width: 14px; height: 14px; transition: transform .4s; }
+.btn-ref.spin .ico { animation: rot .8s linear infinite; }
+@keyframes rot { to { transform: rotate(360deg); } }
+
+/* MAIN */
+.main { padding: 24px 32px; max-width: 1440px; margin: 0 auto; }
+
+
+/* FILTER BAR */
+.fbar { background: var(--white); border-radius: var(--r); padding: 14px 20px; margin-bottom: 20px; box-shadow: var(--sh); display: flex; align-items: center; flex-wrap: wrap; gap: 20px; border: 1px solid var(--gray2); }
+.flbl { font-size: 11.5px; font-weight: 600; color: var(--gray6); text-transform: uppercase; letter-spacing: .5px; white-space: nowrap; }
+.seg { display: flex; background: var(--gray1); border-radius: var(--rx); padding: 3px; gap: 2px; }
+.seg-btn { padding: 5px 13px; border: none; border-radius: 4px; font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 500; color: var(--gray6); background: transparent; cursor: pointer; transition: var(--tr); }
+.seg-btn.on { background: var(--navy3); color: var(--white); box-shadow: 0 1px 4px rgba(12,21,40,.2); }
+.seg-btn:not(.on):hover { background: var(--gray2); }
+.fi { padding: 6px 11px; border: 1.5px solid var(--gray2); border-radius: var(--rx); font-family: 'Outfit', sans-serif; font-size: 12.5px; color: var(--gray9); background: var(--white); outline: none; transition: border-color var(--tr); cursor: pointer; }
+.fi:focus { border-color: var(--gold); }
+.fdiv { width: 1px; height: 24px; background: var(--gray2); }
+.btn-clr { padding: 5px 12px; background: transparent; border: 1.5px solid var(--gray2); border-radius: var(--rx); font-family: 'Outfit', sans-serif; font-size: 12px; color: var(--gray6); cursor: pointer; transition: var(--tr); }
+.btn-clr:hover { border-color: var(--red); color: var(--red); }
+
+/* KPI */
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-bottom: 20px; }
+.kpi { background: var(--white); border-radius: var(--r); padding: 18px 20px 16px; box-shadow: var(--sh); border: 1px solid var(--gray2); position: relative; overflow: hidden; transition: box-shadow var(--tr), transform var(--tr); }
+.kpi:hover { box-shadow: var(--sh2); transform: translateY(-2px); }
+.kpi::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 3px 0 0 3px; }
+.kpi.kg::before { background: var(--gold); } .kpi.kgr::before { background: var(--green); }
+.kpi.kr::before  { background: var(--red); }  .kpi.kn::before  { background: var(--navy4); }
+.kpi-lbl { font-size: 10.5px; font-weight: 600; color: var(--gray4); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 7px; }
+.kpi-val { font-family: 'DM Mono', monospace; font-size: 20px; font-weight: 500; color: var(--gray9); line-height: 1.1; letter-spacing: -.5px; }
+.kpi-val.g { color: var(--green); } .kpi-val.r { color: var(--red); } .kpi-val.go { color: var(--gold); }
+.kpi-sub { font-size: 11px; color: var(--gray4); margin-top: 5px; }
+
+/* CARD */
+.card { background: var(--white); border-radius: var(--r); box-shadow: var(--sh); border: 1px solid var(--gray2); margin-bottom: 20px; overflow: hidden; }
+.card-h { padding: 15px 20px 14px; border-bottom: 1px solid var(--gray1); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.card-t { font-size: 13.5px; font-weight: 600; color: var(--gray9); display: flex; align-items: center; gap: 9px; }
+.card-t::before { content: ''; display: block; width: 3px; height: 15px; background: var(--gold); border-radius: 3px; flex-shrink: 0; }
+.card-s { font-size: 11.5px; color: var(--gray4); }
+.card-b { padding: 20px; } .card-b.np { padding: 0; }
+.ch-wrap { position: relative; height: 300px; }
+
+/* TABLE */
+.tscroll { overflow-x: auto; }
+.dt { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.dt thead th { background: var(--navy3); color: var(--white); padding: 10px 16px; font-weight: 500; font-size: 11.5px; white-space: nowrap; text-align: right; }
+.dt thead th:first-child { text-align: left; }
+.dt td { padding: 9px 16px; text-align: right; border-bottom: 1px solid var(--gray1); white-space: nowrap; font-family: 'DM Mono', monospace; font-size: 12px; }
+.dt td:first-child { text-align: left; font-family: 'Outfit', sans-serif; font-size: 13px; }
+.dt tbody tr:hover { background: var(--off); }
+.row-th td { background: var(--navy3); color: var(--gold2) !important; font-family: 'Outfit', sans-serif !important; font-size: 11.5px !important; font-weight: 600; letter-spacing: .8px; text-transform: uppercase; border-bottom: none; padding: 11px 16px; }
+.row-it td:first-child { padding-left: 32px; color: var(--gray6); }
+.row-sub td { background: var(--gold-bg); font-weight: 600 !important; border-top: 1px solid rgba(196,163,90,.25); border-bottom: 1px solid rgba(196,163,90,.25); }
+.row-sub td:first-child { font-family: 'Outfit', sans-serif !important; font-size: 12.5px !important; }
+.row-tot td { background: var(--navy); color: var(--white) !important; font-weight: 700; font-family: 'DM Mono', monospace !important; border-top: 2px solid var(--gold); }
+.row-tot td:first-child { font-family: 'Outfit', sans-serif !important; font-size: 13px !important; }
+.vp { color: var(--green) !important; } .vn { color: var(--red) !important; } .vg { color: var(--gold) !important; }
+
+/* FTA */
+.fta-kpi { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 20px; }
+.prog { height: 7px; background: var(--gray2); border-radius: 99px; overflow: hidden; margin-top: 10px; }
+.prog-fill { height: 100%; background: linear-gradient(90deg, var(--navy3), var(--gold)); border-radius: 99px; transition: width .7s cubic-bezier(.4,0,.2,1); }
+.prog-lbl { font-size: 10.5px; color: var(--gray4); margin-top: 5px; }
+
+/* STATES */
+.sbox { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 56px 20px; gap: 14px; color: var(--gray4); }
+.spinner { width: 34px; height: 34px; border: 3px solid var(--gray2); border-top-color: var(--gold); border-radius: 50%; animation: rot .75s linear infinite; }
+.sico { font-size: 32px; } .stitle { font-size: 14px; font-weight: 600; color: var(--gray6); } .sdesc { font-size: 12px; text-align: center; max-width: 360px; }
+
+/* DIAG */
+.btn-diag { display: flex; align-items: center; gap: 6px; padding: 7px 14px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.7); border: 1px solid rgba(255,255,255,.15); border-radius: var(--rs); font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 500; cursor: pointer; transition: var(--tr); }
+.btn-diag:hover { background: rgba(255,255,255,.14); color: #fff; }
+.diag-ov { display: none; position: fixed; inset: 0; background: rgba(12,21,40,.75); z-index: 999; padding: 24px; overflow-y: auto; backdrop-filter: blur(4px); }
+.diag-ov.open { display: flex; align-items: flex-start; justify-content: center; }
+.diag-box { background: var(--white); border-radius: 20px; max-width: 1100px; width: 100%; box-shadow: 0 12px 40px rgba(12,21,40,.18); overflow: hidden; }
+.diag-hd { background: var(--navy2); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
+.diag-ttl { font-family: 'DM Serif Display', serif; color: var(--gold2); font-size: 16px; }
+.diag-hd p { font-size: 11.5px; color: rgba(255,255,255,.5); margin-top: 3px; }
+.btn-xdiag { background: rgba(255,255,255,.1); border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.btn-xdiag:hover { background: rgba(255,255,255,.2); }
+.diag-bd { padding: 20px 24px 28px; }
+.diag-sec { font-size: 12px; font-weight: 700; color: var(--navy3); text-transform: uppercase; letter-spacing: .8px; margin: 20px 0 10px; padding-bottom: 6px; border-bottom: 2px solid var(--gold); }
+.diag-sec:first-child { margin-top: 0; }
+.diag-t { width: 100%; border-collapse: collapse; font-size: 11px; font-family: 'DM Mono', monospace; }
+.diag-t th { background: var(--navy3); color: var(--gold3); padding: 6px 10px; text-align: left; white-space: nowrap; font-size: 10px; }
+.diag-t td { padding: 5px 10px; border-bottom: 1px solid var(--gray1); white-space: nowrap; text-align: left; font-size: 11px; }
+.diag-t tr:nth-child(even) td { background: var(--off); }
+.dn { margin-top: 16px; padding: 12px 16px; background: var(--gold-bg); border-left: 3px solid var(--gold); border-radius: 0 6px 6px 0; font-size: 12px; color: var(--gray6); line-height: 1.6; }
+.dn code { background: var(--gray1); padding: 1px 5px; border-radius: 3px; font-size: 11px; color: var(--navy3); }
+
+@media (max-width: 768px) {
+  .hdr, .tabs, .main { padding-left: 16px; padding-right: 16px; }
+  .tabs { overflow-x: auto; }
+}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="brand">
+    <svg class="brand-icon" viewBox="0 0 38 38" fill="none">
+      <rect width="38" height="38" rx="8" fill="#1a2744"/>
+      <path d="M19 7L32 17.5V33H25V24H13V33H6V17.5L19 7Z" stroke="#c4a35a" stroke-width="1.4" fill="none" stroke-linejoin="round"/>
+      <path d="M13 18H25V27H13V18Z" stroke="#c4a35a" stroke-width="1.4" fill="none"/>
+    </svg>
+    <div>
+      <div class="brand-name">Côrtes Velloso</div>
+      <div class="brand-tag">Empreendimentos Imobiliários · Est. 2009</div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <div>
+      <div class="upd-label">Última atualização</div>
+      <div class="upd-time" id="lastUpdate">—</div>
+    </div>
+    <button class="btn-diag" onclick="showDiag()">🔍 Diagnóstico</button>
+    <button class="btn-ref" id="btnRef" onclick="loadAll()">
+      <svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 8A6 6 0 1 1 8 2" stroke-linecap="round"/>
+        <polyline points="8,2 11,2 11,5" fill="currentColor" stroke="none"/>
+      </svg>
+      Atualizar Dados
+    </button>
+  </div>
+</header>
+
+
+<div style="background:var(--navy3);background-image:radial-gradient(ellipse at 70% 50%,rgba(196,163,90,.07) 0%,transparent 60%);padding:28px 40px 22px;border-bottom:1px solid rgba(196,163,90,.15)">
+  <div style="font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:6px">Painel de Gestão</div>
+  <div style="font-family:'DM Serif Display',serif;font-size:26px;color:var(--white);line-height:1.2;margin-bottom:4px">📊 Fluxo de Caixa Loteamentos</div>
+  <div style="font-size:13px;color:rgba(255,255,255,.4)">ESTA — Terras da Estância · FAZE — Terras da Fazenda</div>
+</div>
+<main class="main">
+
+  <!-- ── INTRO ───────────────────────────────────────────────────── -->
+  <div style="background:var(--white);border-radius:var(--r);border:1px solid var(--g2);padding:16px 22px;margin-bottom:24px;display:flex;align-items:center;gap:16px;box-shadow:var(--sh)">
+    <div style="font-size:22px;flex-shrink:0">📋</div>
+    <div>
+      <div style="font-size:13px;font-weight:600;color:var(--g9);margin-bottom:3px">Este painel está dividido em duas seções</div>
+      <div style="font-size:12px;color:var(--g4);line-height:1.6">
+        <strong style="color:var(--g6)">① Consolidado por Ano</strong> — visão agregada do histórico completo, ano a ano. &nbsp;|&nbsp;
+        <strong style="color:var(--g6)">② Visão Mensal</strong> — detalhamento do período selecionado, mês a mês.
+      </div>
+    </div>
+  </div>
+
+  <!-- ── FILTRO EMPREENDIMENTO (compartilhado) ─────────────────────── -->
+  <div class="fbar" style="margin-bottom:24px">
+    <div style="display:flex;align-items:center;gap:9px">
+      <span class="flbl">Empreendimento</span>
+      <div class="seg" id="empSeg">
+        <button class="seg-btn on" data-emp="consolidado" onclick="setEmp(this)">Consolidado</button>
+        <button class="seg-btn"   data-emp="esta"        onclick="setEmp(this)">ESTA</button>
+        <button class="seg-btn"   data-emp="faze"        onclick="setEmp(this)">FAZE</button>
+      </div>
+    </div>
+    <span class="card-s" style="margin-left:auto">Filtro aplicado em ambas as seções abaixo</span>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SEÇÃO 1 — CONSOLIDADO POR ANO
+       ══════════════════════════════════════════════════════════════ -->
+  <div style="font-size:10.5px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--g4);margin-bottom:16px;display:flex;align-items:center;gap:10px">
+    ① Consolidado por Ano — Histórico Completo
+    <span style="flex:1;height:1px;background:var(--g2);display:block"></span>
+  </div>
+
+  <div class="kpi-row" id="kpiRowAnual">
+    <div class="kpi kn" style="grid-column:1/-1"><div class="sbox"><div class="spinner"></div></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-h">
+      <span class="card-t">Receita × Despesas Ano a Ano</span>
+      <span class="card-s" id="chartAnualLbl">—</span>
+    </div>
+    <div class="card-b">
+      <div class="ch-wrap" style="height:280px"><canvas id="anualChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:40px">
+    <div class="card-h">
+      <span class="card-t">Resumo por Ano</span>
+      <span class="card-s">Receita · Despesa · BRP · Lucro</span>
+    </div>
+    <div class="card-b np">
+      <div class="tscroll" id="tblAnual"><div class="sbox"><div class="spinner"></div></div></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SEÇÃO 2 — VISÃO MENSAL
+       ══════════════════════════════════════════════════════════════ -->
+  <div style="font-size:10.5px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--g4);margin-bottom:16px;display:flex;align-items:center;gap:10px">
+    ② Visão Mensal — Período Selecionado
+    <span style="flex:1;height:1px;background:var(--g2);display:block"></span>
+  </div>
+
+  <div class="fbar" style="margin-bottom:20px">
+    <div style="display:flex;align-items:center;gap:9px">
+      <span class="flbl">De</span>
+      <input type="month" class="fi" id="startMonth" onchange="applyF()">
+    </div>
+    <div style="display:flex;align-items:center;gap:9px">
+      <span class="flbl">Até</span>
+      <input type="month" class="fi" id="endMonth" onchange="applyF()">
+    </div>
+    <button class="btn-clr" onclick="clearDates()">✕ Limpar</button>
+  </div>
+
+  <div class="kpi-row" id="kpiRow">
+    <div class="kpi kn" style="grid-column:1/-1"><div class="sbox"><div class="spinner"></div></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-h">
+      <span class="card-t">Receita × Despesas Mês a Mês</span>
+      <span class="card-s" id="chartLbl">—</span>
+    </div>
+    <div class="card-b">
+      <div class="ch-wrap"><canvas id="mainChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-h">
+      <span class="card-t">Resumo por Tipo de Lançamento</span>
+      <span class="card-s">Agrupado pela Coluna E</span>
+    </div>
+    <div class="card-b np">
+      <div class="tscroll" id="tblType"><div class="sbox"><div class="spinner"></div></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-h">
+      <span class="card-t">Detalhamento por Grupo de Contas</span>
+      <span class="card-s">Agrupado pela Coluna F</span>
+    </div>
+    <div class="card-b np">
+      <div class="tscroll" id="tblGroup"><div class="sbox"><div class="spinner"></div></div></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- DIAG MODAL -->
+<div class="diag-ov" id="diagOv" onclick="closeDiagBg(event)">
+  <div class="diag-box">
+    <div class="diag-hd">
+      <div>
+        <div class="diag-ttl">🔍 Diagnóstico de Estrutura CSV</div>
+        <p>Primeiras linhas de cada planilha</p>
+      </div>
+      <button class="btn-xdiag" onclick="closeDiag()">✕</button>
+    </div>
+    <div class="diag-bd" id="diagContent">
+      <div class="sbox"><div class="spinner"></div></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+// ================================================================
+// ⚙️  LINKS CSV — edite aqui quando trocar a planilha
+// ================================================================
+const CSV = {
+  esta: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRvA-82_EfnC1mCR-8HK3QoRr4jKgC_dF8q7rwxq3b66RUAgqURQgpUeB1wr11qh-QaSpxd3VIhX8on/pub?gid=109143011&single=true&output=csv',
+  faze: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTOEeojtdQR1PaDuYu-ldQeaPxBF67wzqvphwc1mu-WuM34Ai3nNXQ_aSLwkpNHLe3gD-dt23Bcxxth/pub?gid=1641224169&single=true&output=csv'
+};
+
+// ================================================================
+// ÍNDICES DE COLUNA — confirmados pelo diagnóstico
+// ================================================================
+const C = { DATE:2, TIPO:4, GRUPO:5, VALOR:6 };
+const FTA = { TOTAL: 6141357.73, PARCELA:45, MES:46, VALOR:47, N:120 };
+
+// ================================================================
+// ESTADO
+// ================================================================
+const S = { esta:[], faze:[], emp:'consolidado', s:null, e:null, chart:null, anualChart:null, ok:false };
+
+// ================================================================
+// INICIALIZAÇÃO
+// ================================================================
+document.addEventListener('DOMContentLoaded', () => {
+  loadAll();
+});
+
+// ================================================================
+// CARREGAMENTO
+// ================================================================
+async function loadAll() {
+  const btn = document.getElementById('btnRef');
+  btn.disabled = true; btn.classList.add('spin');
+  prog('Carregando ESTA...');
+  try {
+    S.esta = await load1(CSV.esta, 'ESTA');
+    prog('Carregando FAZE...');
+    S.faze = await load1(CSV.faze, 'FAZE');
+    S.ok = true;
+    initDates();
+    renderFluxo();
+    document.getElementById('lastUpdate').textContent =
+      new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  } catch(e) {
+    showErr(e.message);
+  } finally {
+    btn.disabled = false; btn.classList.remove('spin');
+    btn.innerHTML = '<svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 8A6 6 0 1 1 8 2" stroke-linecap="round"/><polyline points="8,2 11,2 11,5" fill="currentColor" stroke="none"/></svg> Atualizar Dados';
+  }
+}
+
+async function load1(url, label) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('Erro HTTP '+r.status+' em '+label);
+  return parseCSV(await r.text());
+}
+
+function prog(msg) { const el=document.getElementById('progMsg'); if(el) el.textContent=msg; }
+
+// ================================================================
+// CSV PARSER
+// ================================================================
+function parseCSV(txt) {
+  const raw = txt.replace(/^\uFEFF/,'').trim();
+  const lines = raw.split(/\r?\n/);
+  if (!lines.length) return [];
+  const first = lines[0];
+  const sep = (first.match(/;/g)||[]).length > (first.match(/,/g)||[]).length ? ';' : ',';
+  return lines.filter(l=>l.trim()).map(l=>splitLine(l,sep));
+}
+
+function splitLine(line, sep) {
+  const cols=[]; let cur='', inQ=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else{inQ=!inQ;}}
+    else if(c===sep&&!inQ){cols.push(cur.trim());cur='';}
+    else cur+=c;
+  }
+  cols.push(cur.trim()); return cols;
+}
+
+// ================================================================
+// CONVERSORES
+// ================================================================
+function parseBR(v) {
+  if(!v) return 0;
+  let s=String(v).replace(/R\$\s?/gi,'').replace(/\s/g,'').trim();
+  if(!s||s==='-') return 0;
+  if(/\d\.\d{3},/.test(s)) s=s.replace(/\./g,'').replace(',','.');
+  else if(s.includes(',')) s=s.replace(/\./g,'').replace(',','.');
+  const n=parseFloat(s); return isNaN(n)?0:n;
+}
+
+function parseM(v) {
+  if(!v) return null;
+  const s=String(v).trim().toLowerCase();
+  const MO={jan:'01',fev:'02',mar:'03',abr:'04',mai:'05',jun:'06',jul:'07',ago:'08',set:'09',out:'10',nov:'11',dez:'12',feb:'02',apr:'04',may:'05',aug:'08',sep:'09',oct:'10'};
+  // jan/25
+  let m=s.match(/^([a-z]{3})[\/\.\-](\d{2,4})$/);
+  if(m&&MO[m[1]]){const y=m[2].length===2?'20'+m[2]:m[2];return y+'-'+MO[m[1]];}
+  // M/D/YYYY (Google Sheets)
+  m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(m){const a=+m[1],b=+m[2],y=m[3];return y+'-'+(a>12?String(b).padStart(2,'0'):String(a).padStart(2,'0'));}
+  // YYYY-MM
+  m=s.match(/^(\d{4})-(\d{2})/);
+  if(m) return m[1]+'-'+m[2];
+  // MM/YYYY or MM/YY
+  m=s.match(/^(\d{1,2})[\/\-](\d{2,4})$/);
+  if(m){const mo=String(m[1]).padStart(2,'0'),y=m[2].length===2?'20'+m[2]:m[2];return y+'-'+mo;}
+  return null;
+}
+
+function fmtM(ym){
+  if(!ym) return '—';
+  const [y,m]=ym.split('-');
+  const N=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  return N[+m-1]+'/'+y.slice(2);
+}
+
+function fmtR(v){
+  if(v===null||v===undefined||isNaN(v)) return '—';
+  // Mostra sinal negativo quando o valor for negativo
+  const abs=Math.abs(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:0,maximumFractionDigits:0});
+  return v<0?'-'+abs:abs;
+}
+
+// ================================================================
+// EXTRAÇÃO DE DADOS
+// ================================================================
+function extract(raw) {
+  if(!raw||raw.length<2) return [];
+  const MIN=Math.max(C.DATE,C.TIPO,C.GRUPO,C.VALOR)+1;
+  const res=[];
+  for(let i=1;i<raw.length;i++){
+    const row=raw[i];
+    if(!row||row.length<MIN) continue;
+    const d=parseM(row[C.DATE]);
+    if(!d) continue;
+    const tipo=String(row[C.TIPO]||'').trim();
+    const grupo=String(row[C.GRUPO]||'').trim();
+    if(!tipo&&!grupo) continue;
+    res.push({d,tipo,grupo,v:parseBR(row[C.VALOR])});
+  }
+  return res;
+}
+
+function getData() {
+  const e=extract(S.esta), f=extract(S.faze);
+  let rows = S.emp==='esta'?e:S.emp==='faze'?f:[...e,...f];
+  return rows.filter(r=>(!S.s||r.d>=S.s)&&(!S.e||r.d<=S.e));
+}
+
+function months(rows){return [...new Set(rows.map(r=>r.d))].sort().reverse();}
+
+// ================================================================
+// TIPO HELPERS
+// ================================================================
+function norm(t){return String(t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
+function isRec(t){return norm(t).includes('receit');}
+function isDes(t){return norm(t).includes('despesa');}
+function isBRP(t){return norm(t).includes('mensalidade brp')||norm(t)==='brp';}
+function isDist(t){const n=norm(t);return n.includes('retir')||n.includes('distribui');}
+function tipoCor(t){return isRec(t)?'vp':isDes(t)?'vn':isBRP(t)?'vn':isDist(t)?'vp':'';}
+function tipoOrd(t){
+  const n=norm(t);
+  if(n.includes('saldo ini')) return 0;
+  if(n.includes('receit')) return 1;
+  if(n.includes('despesa')) return 2;
+  if(n.includes('mensalidade brp')) return 3;
+  if(n.includes('retir')||n.includes('distribui')) return 4;
+  if(n.includes('saldo fin')) return 5;
+  return 9;
+}
+
+// ================================================================
+// CONTROLES
+// ================================================================
+function goTab(id,btn){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('panel-'+id).classList.add('on');
+}
+
+function setEmp(btn){
+  document.querySelectorAll('#empSeg .seg-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on'); S.emp=btn.dataset.emp;
+  if(S.ok) renderFluxo();
+}
+
+function applyF(){
+  S.s=document.getElementById('startMonth').value||null;
+  S.e=document.getElementById('endMonth').value||null;
+  if(S.ok) renderFluxo();
+}
+
+function clearDates(){
+  document.getElementById('startMonth').value='';
+  document.getElementById('endMonth').value='';
+  S.s=null; S.e=null;
+  if(S.ok) renderFluxo();
+}
+
+function initDates(){
+  const all=[...extract(S.esta),...extract(S.faze)];
+  if(!all.length) return;
+  // months() retorna decrescente (mais recente primeiro)
+  const ms=months(all);
+  const newest=ms[0], oldest=ms[ms.length-1];
+  const si=document.getElementById('startMonth'), ei=document.getElementById('endMonth');
+  si.min=ei.min=oldest; si.max=ei.max=newest;
+  // Padrão: últimos 14 meses (os 14 primeiros da lista decrescente)
+  const def=ms[Math.min(13, ms.length-1)]; // 14º mais recente = início do período
+  si.value=def; ei.value=newest; S.s=def; S.e=newest;
+}
+
+// ================================================================
+// RENDER FLUXO
+// ================================================================
+function renderFluxo(){
+  const rows=getData(), ms=months(rows);
+  if(!rows.length){setE('kpiRow');setE('tblType');setE('tblGroup');destroyChart();return;}
+  renderKPIs(rows,ms);
+  renderChart(rows,ms);
+  renderTblType(rows,ms);
+  renderTblGroup(rows,ms);
+  renderAnual();
+}
+
+function destroyChart(){if(S.chart){S.chart.destroy();S.chart=null;}}
+
+function renderKPIs(rows,ms){
+  const rec=rows.filter(r=>isRec(r.tipo)).reduce((s,r)=>s+r.v,0);
+  const dep=rows.filter(r=>isDes(r.tipo)).reduce((s,r)=>s+r.v,0);
+  const brp=rows.filter(r=>isBRP(r.tipo)).reduce((s,r)=>s+r.v,0);
+  const liq=rec-dep-brp;
+  const emp={esta:'ESTA',faze:'FAZE',consolidado:'Consolidado'}[S.emp];
+  const per=ms.length===1?fmtM(ms[0]):`${fmtM(ms[0])} – ${fmtM(ms[ms.length-1])}`;
+  document.getElementById('kpiRow').innerHTML=`
+    <div class="kpi kg"><div class="kpi-lbl">Período</div><div class="kpi-val" style="font-size:15px;font-family:'Outfit',sans-serif">${per}</div><div class="kpi-sub">${ms.length} ${ms.length===1?'mês':'meses'} · ${emp}</div></div>
+    <div class="kpi kgr"><div class="kpi-lbl">Total Receitas</div><div class="kpi-val g">${fmtR(rec)}</div><div class="kpi-sub">Período selecionado</div></div>
+    <div class="kpi kr"><div class="kpi-lbl">Total Despesas</div><div class="kpi-val r">${fmtR(dep)}</div><div class="kpi-sub">Período selecionado</div></div>
+    <div class="kpi kr"><div class="kpi-lbl">Mensalidade BRP</div><div class="kpi-val r">${brp?fmtR(brp):'—'}</div><div class="kpi-sub">Deduzido do lucro</div></div>
+    <div class="kpi ${liq>=0?'kn':'kr'}"><div class="kpi-lbl">Lucro do Período</div><div class="kpi-val ${liq>=0?'go':'r'}">${fmtR(liq)}</div><div class="kpi-sub">Receitas − Despesas − BRP</div></div>`;
+}
+
+function renderChart(rows,ms){
+  destroyChart();
+  const rec=ms.map(m=>rows.filter(r=>r.d===m&&isRec(r.tipo)).reduce((s,r)=>s+r.v,0));
+  const dep=ms.map(m=>rows.filter(r=>r.d===m&&isDes(r.tipo)).reduce((s,r)=>s+r.v,0));
+  const liq=ms.map((_,i)=>rec[i]-dep[i]);
+  const lbl=ms.map(fmtM);
+  const per=ms.length===1?lbl[0]:`${lbl[0]} → ${lbl[lbl.length-1]}`;
+  document.getElementById('chartLbl').textContent=per;
+  S.chart=new Chart(document.getElementById('mainChart').getContext('2d'),{
+    data:{labels:lbl,datasets:[
+      {type:'bar',label:'Receita',data:rec,backgroundColor:'rgba(39,174,96,.65)',borderColor:'#27ae60',borderWidth:1,borderRadius:4,order:2},
+      {type:'bar',label:'Despesa',data:dep,backgroundColor:'rgba(192,57,43,.6)',borderColor:'#c0392b',borderWidth:1,borderRadius:4,order:2},
+      {type:'line',label:'Resultado Líquido',data:liq,borderColor:'#c4a35a',borderWidth:2.5,pointBackgroundColor:'#c4a35a',pointRadius:ms.length<=24?4:2,tension:.35,fill:false,order:1}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{position:'top',align:'end',labels:{font:{family:'Outfit',size:12},padding:18,usePointStyle:true}},
+        tooltip:{backgroundColor:'#0c1528',titleColor:'#c4a35a',bodyColor:'rgba(255,255,255,.8)',borderColor:'rgba(196,163,90,.3)',borderWidth:1,padding:12,
+          callbacks:{label:c=>`  ${c.dataset.label}: ${fmtR(c.parsed.y)}`}}},
+      scales:{x:{grid:{display:false},ticks:{font:{family:'DM Mono',size:10.5},color:'#8b95aa',maxRotation:ms.length>18?45:0}},
+        y:{grid:{color:'rgba(0,0,0,.04)',drawTicks:false},border:{display:false},ticks:{font:{family:'DM Mono',size:10.5},color:'#8b95aa',
+          callback:v=>Math.abs(v)>=1000000?`R$${(v/1e6).toFixed(1)}M`:Math.abs(v)>=1000?`R$${(v/1000).toFixed(0)}k`:fmtR(v)}}}}
+  });
+}
+
+function renderTblType(rows,ms){
+  const multi=ms.length>1;
+  const tipos=[...new Set(rows.map(r=>r.tipo))].filter(t=>!isDist(t)&&!isBRP(t)).sort((a,b)=>tipoOrd(a)-tipoOrd(b));
+  let h=`<table class="dt"><thead><tr><th style="min-width:200px;text-align:left">Tipo</th>${multi?ms.map(m=>`<th>${fmtM(m)}</th>`).join(''):''}<th>Total</th></tr></thead><tbody>`;
+
+  for(const tipo of tipos){
+    const tr=rows.filter(r=>r.tipo===tipo);
+    const tot=tr.reduce((s,r)=>s+r.v,0);
+    const cls=tipoCor(tipo);
+    h+=`<tr><td style="font-weight:600">${tipo}</td>`;
+    if(multi) ms.forEach(m=>{const v=tr.filter(r=>r.d===m).reduce((s,r)=>s+r.v,0);h+=`<td class="${cls}">${v?fmtR(v):'—'}</td>`;});
+    h+=`<td class="${cls}" style="font-weight:700">${fmtR(tot)}</td></tr>`;
+  }
+
+  // Closing rows
+  const recT=rows.filter(r=>isRec(r.tipo)).reduce((s,r)=>s+r.v,0);
+  const depT=rows.filter(r=>isDes(r.tipo)).reduce((s,r)=>s+r.v,0);
+  const brpT=rows.filter(r=>isBRP(r.tipo)).reduce((s,r)=>s+r.v,0);
+  const subT=recT-depT, lucro=subT-brpT;
+  const subByM=ms.map(m=>rows.filter(r=>r.d===m&&isRec(r.tipo)).reduce((s,r)=>s+r.v,0)-rows.filter(r=>r.d===m&&isDes(r.tipo)).reduce((s,r)=>s+r.v,0));
+  const brpByM=ms.map(m=>rows.filter(r=>r.d===m&&isBRP(r.tipo)).reduce((s,r)=>s+r.v,0));
+  const lucByM=ms.map((_,i)=>subByM[i]-brpByM[i]);
+
+  h+=`<tr><td colspan="${multi?ms.length+2:2}" style="padding:0;height:6px;background:var(--gray1)"></td></tr>`;
+  h+=`<tr class="row-sub"><td>Subtotal</td>${multi?subByM.map(v=>`<td class="${v>=0?'vp':'vn'}">${fmtR(v)}</td>`).join(''):''}<td class="${subT>=0?'vp':'vn'}" style="font-weight:700">${fmtR(subT)}</td></tr>`;
+  if(brpT!==0||ms.some(m=>rows.some(r=>r.d===m&&isBRP(r.tipo))))
+    h+=`<tr class="row-sub"><td style="color:var(--red)">( − ) Mensalidade BRP</td>${multi?brpByM.map(v=>`<td class="${v?'vn':''}">${v?fmtR(v):'—'}</td>`).join(''):''}<td class="${brpT?'vn':''}">${brpT?fmtR(brpT):'—'}</td></tr>`;
+  h+=`<tr class="row-tot"><td>Lucro do Mês</td>${multi?lucByM.map(v=>`<td class="${v>=0?'vp':'vn'}">${fmtR(v)}</td>`).join(''):''}<td class="${lucro>=0?'vp':'vn'}">${fmtR(lucro)}</td></tr>`;
+  h+='</tbody></table>';
+  document.getElementById('tblType').innerHTML=h;
+}
+
+function renderTblGroup(rows,ms){
+  const multi=ms.length>1;
+  const tiposAll=[...new Set(rows.map(r=>r.tipo))].sort((a,b)=>tipoOrd(a)-tipoOrd(b));
+  let h=`<table class="dt"><thead><tr><th style="min-width:220px;text-align:left">Grupo</th>${multi?ms.map(m=>`<th>${fmtM(m)}</th>`).join(''):''}<th>Total</th></tr></thead><tbody>`;
+
+  for(const tipo of tiposAll){
+    if(isDist(tipo)||isBRP(tipo)) continue;
+    const grupos=[...new Set(rows.filter(r=>r.tipo===tipo).map(r=>r.grupo))];
+    h+=`<tr class="row-th"><td colspan="${multi?ms.length+2:2}">${tipo}</td></tr>`;
+    let sub=0;
+    const subM=new Array(ms.length).fill(0);
+    for(const g of grupos){
+      const gr=rows.filter(r=>r.tipo===tipo&&r.grupo===g);
+      const tot=gr.reduce((s,r)=>s+r.v,0); sub+=tot;
+      const cls=tipoCor(tipo);
+      h+=`<tr class="row-it"><td>${g}</td>`;
+      if(multi) ms.forEach((m,i)=>{const v=gr.filter(r=>r.d===m).reduce((s,r)=>s+r.v,0);subM[i]+=v;h+=`<td class="${cls}">${v?fmtR(v):'—'}</td>`;});
+      h+=`<td class="${cls}" style="font-weight:600">${fmtR(tot)}</td></tr>`;
+    }
+    const cls=tipoCor(tipo);
+    h+=`<tr class="row-sub"><td>Subtotal — ${tipo}</td>${multi?subM.map(v=>`<td class="${cls}">${fmtR(v)}</td>`).join(''):''}<td class="${cls}">${fmtR(sub)}</td></tr>`;
+  }
+  h+='</tbody></table>';
+  document.getElementById('tblGroup').innerHTML=h;
+}
+
+// ================================================================
+// RENDER FTA
+// ================================================================
+function renderFTA(){
+  if(!S.ok) return;
+  S.ftaM=document.getElementById('ftaMonth').value;
+  const raw=S.fta, base=S.ftaM;
+  const parc=[];
+  for(let i=1;i<raw.length;i++){
+    const row=raw[i];
+    if(!row||row.length<=FTA.VALOR) continue;
+    const num=+row[FTA.PARCELA], mes=parseM(row[FTA.MES]), val=parseBR(row[FTA.VALOR]);
+    if(!num||isNaN(num)||!mes||!val) continue;
+    parc.push({num,mes,val});
+  }
+  parc.sort((a,b)=>a.num-b.num);
+  const pagas=base?parc.filter(p=>p.mes<=base):parc;
+  const rec=pagas.reduce((s,p)=>s+p.val,0);
+  const ultima=pagas.length?pagas[pagas.length-1]:null;
+  const pct=(pagas.length/FTA.N)*100;
+
+  document.getElementById('ftaKpis').innerHTML=`
+    <div class="kpi kn"><div class="kpi-lbl">Total Emprestado</div><div class="kpi-val go">${fmtR(FTA.TOTAL)}</div><div class="kpi-sub">Valor final da Infra Antecipada, já descontado o valor do acerto com FTA</div></div>
+    <div class="kpi kg"><div class="kpi-lbl">Parcela Atual</div><div class="kpi-val go">${ultima?`${ultima.num} / ${FTA.N}`:'—'}</div><div class="kpi-sub">${ultima?`Ref. ${fmtM(ultima.mes)}`:'Sem dados'}</div><div class="prog"><div class="prog-fill" style="width:${Math.min(pct,100).toFixed(1)}%"></div></div><div class="prog-lbl">${pct.toFixed(1)}% concluído (${pagas.length} de ${FTA.N} parcelas)</div></div>
+    <div class="kpi kgr"><div class="kpi-lbl">Recebido Acumulado</div><div class="kpi-val g">${fmtR(rec)}</div><div class="kpi-sub">Até ${base?fmtM(base):'hoje'}</div></div>`;
+
+  document.getElementById('ftaSub').textContent=`${pagas.length} parcelas recebidas até ${base?fmtM(base):'hoje'}`;
+  if(!parc.length){setE('ftaTable');return;}
+  let acum=0;
+  let h=`<table class="dt"><thead><tr><th style="text-align:center;width:80px">Parcela</th><th style="text-align:center">Mês Ref.</th><th>Valor Recebido</th><th>Acumulado</th><th style="text-align:center">Status</th></tr></thead><tbody>`;
+  for(const p of parc){
+    const ativa=!base||p.mes<=base;
+    if(ativa) acum+=p.val;
+    h+=`<tr style="${!ativa?'opacity:.32':''}"><td style="text-align:center;font-weight:700;color:#1a2744">${p.num}</td><td style="text-align:center;font-family:'Outfit',sans-serif">${fmtM(p.mes)}</td><td class="vp">${fmtR(p.val)}</td><td style="font-weight:600">${ativa?fmtR(acum):'—'}</td><td style="text-align:center">${ativa?'<span style="background:rgba(39,174,96,.12);color:#27ae60;padding:2px 9px;border-radius:99px;font-size:10.5px;font-weight:600">✓ Recebida</span>':'<span style="background:var(--gray1);color:var(--gray4);padding:2px 9px;border-radius:99px;font-size:10.5px">Futura</span>'}</td></tr>`;
+  }
+  h+='</tbody></table>';
+  document.getElementById('ftaTable').innerHTML=h;
+}
+
+// ================================================================
+// CONSOLIDADO POR ANO
+// ================================================================
+function destroyAnualChart(){if(S.anualChart){S.anualChart.destroy();S.anualChart=null;}}
+
+function getAnualData() {
+  const e=extract(S.esta), f=extract(S.faze);
+  return S.emp==='esta'?e:S.emp==='faze'?f:[...e,...f];
+}
+
+function renderAnual() {
+  const rows = getAnualData();
+  if (!rows.length) { setE('kpiRowAnual'); setE('tblAnual'); destroyAnualChart(); return; }
+
+  // Agrupa por ano (decrescente)
+  const anos = [...new Set(rows.map(r=>r.d.slice(0,4)))].sort().reverse();
+
+  const recByAno = anos.map(a=>rows.filter(r=>r.d.startsWith(a)&&isRec(r.tipo)).reduce((s,r)=>s+r.v,0));
+  const depByAno = anos.map(a=>rows.filter(r=>r.d.startsWith(a)&&isDes(r.tipo)).reduce((s,r)=>s+r.v,0));
+  const brpByAno = anos.map(a=>rows.filter(r=>r.d.startsWith(a)&&isBRP(r.tipo)).reduce((s,r)=>s+r.v,0));
+  const subByAno = anos.map((_,i)=>recByAno[i]-depByAno[i]);
+  const lucByAno = anos.map((_,i)=>subByAno[i]-brpByAno[i]);
+
+  const totalRec = recByAno.reduce((s,v)=>s+v,0);
+  const totalDep = depByAno.reduce((s,v)=>s+v,0);
+  const totalBRP = brpByAno.reduce((s,v)=>s+v,0);
+  const totalLuc = totalRec - totalDep - totalBRP;
+  const emp = {esta:'ESTA',faze:'FAZE',consolidado:'Consolidado'}[S.emp];
+
+  // ── KPIs ────────────────────────────────────────────────────────
+  document.getElementById('kpiRowAnual').innerHTML = `
+    <div class="kpi kg">
+      <div class="kpi-lbl">Empreendimento</div>
+      <div class="kpi-val" style="font-size:15px;font-family:'Outfit',sans-serif">${emp}</div>
+      <div class="kpi-sub">${anos.length} ${anos.length===1?'ano':'anos'} de histórico</div>
+    </div>
+    <div class="kpi kgr">
+      <div class="kpi-lbl">Total Receitas</div>
+      <div class="kpi-val g">${fmtR(totalRec)}</div>
+      <div class="kpi-sub">Histórico completo</div>
+    </div>
+    <div class="kpi kr">
+      <div class="kpi-lbl">Total Despesas</div>
+      <div class="kpi-val r">${fmtR(totalDep)}</div>
+      <div class="kpi-sub">Histórico completo</div>
+    </div>
+    <div class="kpi kr">
+      <div class="kpi-lbl">Total BRP</div>
+      <div class="kpi-val r">${totalBRP?fmtR(totalBRP):'—'}</div>
+      <div class="kpi-sub">Mensalidades pagas</div>
+    </div>
+    <div class="kpi ${totalLuc>=0?'kn':'kr'}">
+      <div class="kpi-lbl">Lucro do Período</div>
+      <div class="kpi-val ${totalLuc>=0?'go':'r'}">${fmtR(totalLuc)}</div>
+      <div class="kpi-sub">Receitas − Despesas − BRP</div>
+    </div>`;
+
+  // ── Label gráfico ────────────────────────────────────────────────
+  const anoRange = anos.length===1?anos[0]:`${anos[anos.length-1]} – ${anos[0]}`;
+  document.getElementById('chartAnualLbl').textContent = `${emp} · ${anoRange}`;
+
+  // ── Gráfico ──────────────────────────────────────────────────────
+  destroyAnualChart();
+  S.anualChart = new Chart(document.getElementById('anualChart').getContext('2d'), {
+    data:{ labels:anos, datasets:[
+      {type:'bar',  label:'Receita',        data:recByAno, backgroundColor:'rgba(39,174,96,.65)',  borderColor:'#27ae60', borderWidth:1, borderRadius:5, order:2},
+      {type:'bar',  label:'Despesa',        data:depByAno, backgroundColor:'rgba(192,57,43,.60)',  borderColor:'#c0392b', borderWidth:1, borderRadius:5, order:2},
+      {type:'bar',  label:'Mensalidade BRP',data:brpByAno, backgroundColor:'rgba(41,128,185,.65)', borderColor:'#2980b9', borderWidth:1, borderRadius:5, order:2},
+      {type:'line', label:'Lucro Anual',    data:lucByAno, borderColor:'#c4a35a', borderWidth:2.5, pointBackgroundColor:'#c4a35a', pointRadius:5, pointHoverRadius:7, tension:.3, fill:false, order:1}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{position:'top',align:'end',labels:{font:{family:'Outfit',size:12},padding:18,usePointStyle:true}},
+        tooltip:{backgroundColor:'#0c1528',titleColor:'#c4a35a',bodyColor:'rgba(255,255,255,.8)',
+          borderColor:'rgba(196,163,90,.3)',borderWidth:1,padding:12,
+          callbacks:{label:c=>`  ${c.dataset.label}: ${fmtR(c.parsed.y)}`}}
+      },
+      scales:{
+        x:{grid:{display:false},ticks:{font:{family:'DM Mono',size:11},color:'#8b95aa'}},
+        y:{grid:{color:'rgba(0,0,0,.04)',drawTicks:false},border:{display:false},
+          ticks:{font:{family:'DM Mono',size:10.5},color:'#8b95aa',
+            callback:v=>Math.abs(v)>=1e6?`R$${(v/1e6).toFixed(1)}M`:Math.abs(v)>=1000?`R$${(v/1000).toFixed(0)}k`:fmtR(v)}}
+      }}
+  });
+
+  // ── Tabela resumo por ano ────────────────────────────────────────
+  let h = `<table class="dt"><thead><tr>
+    <th style="min-width:80px;text-align:left">Ano</th>
+    <th>Receita</th><th>Despesa</th><th>Subtotal</th><th>( − ) BRP</th><th>Lucro do Ano</th>
+  </tr></thead><tbody>`;
+
+  anos.forEach((_,i) => {
+    const sub = subByAno[i], luc = lucByAno[i];
+    h += `<tr>
+      <td style="font-family:'Outfit',sans-serif;font-weight:700;color:var(--navy3)">${anos[i]}</td>
+      <td class="vp">${fmtR(recByAno[i])}</td>
+      <td class="vn">${fmtR(depByAno[i])}</td>
+      <td class="${sub>=0?'vp':'vn'}" style="font-weight:600">${fmtR(sub)}</td>
+      <td class="${brpByAno[i]?'vn':''}">${brpByAno[i]?fmtR(brpByAno[i]):'—'}</td>
+      <td class="${luc>=0?'vp':'vn'}" style="font-weight:700">${fmtR(luc)}</td>
+    </tr>`;
+  });
+
+  // Linha total
+  const subTotal = totalRec - totalDep;
+  h += `<tr class="row-tot">
+    <td>TOTAL</td>
+    <td>${fmtR(totalRec)}</td>
+    <td>${fmtR(totalDep)}</td>
+    <td>${fmtR(subTotal)}</td>
+    <td>${totalBRP?fmtR(totalBRP):'—'}</td>
+    <td class="${totalLuc>=0?'vp':'vn'}">${fmtR(totalLuc)}</td>
+  </tr>`;
+  h += '</tbody></table>';
+  document.getElementById('tblAnual').innerHTML = h;
+}
+
+// ================================================================
+// DIAGNÓSTICO
+// ================================================================
+function showDiag(){document.getElementById('diagOv').classList.add('open');renderDiag();}
+function closeDiag(){document.getElementById('diagOv').classList.remove('open');}
+function closeDiagBg(e){if(e.target.id==='diagOv')closeDiag();}
+
+function renderDiag(){
+  const el=document.getElementById('diagContent');
+  if(!S.ok){el.innerHTML='<div class="sbox"><p class="stitle">Carregue os dados primeiro</p></div>';return;}
+  function colL(n){let s='';n++;while(n>0){n--;s=String.fromCharCode(65+(n%26))+s;n=Math.floor(n/26);}return s;}
+  function tbl(raw,label){
+    if(!raw||!raw.length) return '<p style="color:#999">Sem dados.</p>';
+    const T={[C.DATE]:'★Data',[C.TIPO]:'★Tipo',[C.GRUPO]:'★Grupo',[C.VALOR]:'★Valor'};
+    const prev=raw.slice(0,6), maxC=Math.max(...prev.map(r=>r?r.length:0));
+    let h=`<p style="font-size:11px;color:#999;margin-bottom:8px"><strong>${raw.length} linhas × ${maxC} colunas</strong></p>`;
+    h+='<div style="overflow-x:auto"><table class="diag-t"><thead><tr><th>Linha</th>';
+    for(let c=0;c<maxC;c++){const isT=T[c];h+=`<th style="${isT?'background:#8a6e1a;color:#fff':''}">${colL(c)}(${c})${isT?' ★':''}</th>`;}
+    h+='</tr></thead><tbody>';
+    prev.forEach((row,i)=>{h+=`<tr><td style="font-weight:700;color:#1a2744">${i===0?'Hdr':i}</td>`;for(let c=0;c<maxC;c++){const v=row&&row[c]!==undefined?row[c]:'';const d=v.length>22?v.slice(0,19)+'…':v;const isT=!!T[c];h+=`<td style="${isT?'background:rgba(196,163,90,.15);font-weight:700':''}" title="${v}">${d||'·'}</td>`;}h+='</tr>';});
+    h+='</tbody></table></div>';return h;
+  }
+  el.innerHTML=`<div class="diag-sec">ESTA — Fluxo Caixa</div>${tbl(S.esta,'ESTA')}<div class="diag-sec">FAZE — Fluxo Caixa</div>${tbl(S.faze,'FAZE')}<div class="diag-sec">FTA</div>${tbl(S.fta,'FTA')}<div class="dn"><strong>Índices atuais:</strong> Data=C(${C.DATE}), Tipo=E(${C.TIPO}), Grupo=F(${C.GRUPO}), Valor=G(${C.VALOR})</div>`;
+}
+
+// ================================================================
+// UTILS
+// ================================================================
+function setE(id){
+  const el=document.getElementById(id);
+  if(el) el.innerHTML='<div class="sbox"><span class="sico">📭</span><p class="stitle">Sem dados</p></div>';
+}
+function showErr(msg){
+  document.getElementById('kpiRow').innerHTML=`<div class="kpi kn" style="grid-column:1/-1"><div class="sbox"><span class="sico">⚠️</span><p class="stitle">Erro ao carregar</p><p class="sdesc">${msg}</p></div></div>`;
+}
+</script>
+</body>
+</html>

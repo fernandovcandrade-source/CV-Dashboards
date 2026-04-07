@@ -129,27 +129,134 @@ body{font-family:'Outfit',sans-serif;background:var(--off);color:var(--g9);min-h
   <div class="card">
     <div class="card-h">
       <span class="card-t">Evolução do Patrimônio Financeiro</span>
-      <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:11.5px;font-weight:600;color:var(--g6);text-transform:uppercase;letter-spacing:.5px">Consolidar por</span>
-        <div style="display:flex;background:var(--g1);border-radius:var(--rx);padding:3px;gap:2px" id="aggSeg">
-          <button class="agg-btn" data-agg="month"   onclick="setAgg(this)">Mês</button>
-          <button class="agg-btn on" data-agg="quarter" onclick="setAgg(this)">Trimestre</button>
-          <button class="agg-btn" data-agg="year"    onclick="setAgg(this)">Ano</button>
+      <div style="display:flex;align-items:center;gap:12px">
+        <button onclick="openModal()" style="display:flex;align-items:center;gap:6px;padding:6px 13px;background:var(--gold-bg);color:var(--gold2);border:1px solid var(--gold-bd);border-radius:var(--rx);font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer">
+          + Evento
+        </button>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11.5px;font-weight:600;color:var(--g6);text-transform:uppercase;letter-spacing:.5px">Consolidar por</span>
+          <div style="display:flex;background:var(--g1);border-radius:var(--rx);padding:3px;gap:2px" id="aggSeg">
+            <button class="agg-btn" data-agg="month"   onclick="setAgg(this)">Mês</button>
+            <button class="agg-btn on" data-agg="quarter" onclick="setAgg(this)">Trimestre</button>
+            <button class="agg-btn" data-agg="year"    onclick="setAgg(this)">Ano</button>
+          </div>
         </div>
       </div>
     </div>
-    <div class="card-b" style="position:relative">
+    <div class="card-b" style="position:relative;overflow:visible">
       <div class="ch-wrap" style="height:360px"><canvas id="patriChart"></canvas></div>
-      <div id="htmlTooltip">
-        <div class="tt-head"><div class="tt-date" id="ttDate"></div><div class="tt-vals" id="ttVals"></div></div>
-        <div class="tt-evs" id="ttEvs"><div class="tt-evs-lbl">Eventos</div><div class="tt-evs-list" id="ttEvsList"></div></div>
-        <div class="tt-footer"><button class="tt-add-btn" onclick="openModalForDate()">+ Adicionar evento neste mês</button></div>
-      </div>
+      <!-- tooltip moved to body-level for click reliability -->
     </div>
     <div style="padding:6px 20px 12px;font-size:11px;color:var(--g4);display:flex;align-items:center;gap:6px">
       <span>💡</span><span>Passe o mouse sobre o gráfico para ver detalhes e eventos. Clique em "+ Adicionar evento" no tooltip para registrar marcos.</span>
     </div>
   </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       RENDIMENTO APLICAÇÕES FINANCEIRAS
+       ══════════════════════════════════════════════════════════ -->
+  <div style="font-size:10.5px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--g4);margin:32px 0 16px;display:flex;align-items:center;gap:10px">
+    💰 Rendimento Aplicações Financeiras
+    <span style="flex:1;height:1px;background:var(--g2);display:block"></span>
+  </div>
+
+  <!-- KPIs Rendimento -->
+  <div class="kpi-row" id="rendKpiRow">
+    <div class="kpi kn" style="grid-column:1/-1"><div class="sbox"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- Gráfico Rendimento -->
+  <div class="card">
+    <div class="card-h">
+      <span class="card-t">Evolução Carteira por Valor | Oikos</span>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <!-- Origem -->
+        <div style="display:flex;align-items:center;gap:7px">
+          <span style="font-size:11px;font-weight:600;color:var(--g6);text-transform:uppercase;letter-spacing:.4px">Origem</span>
+          <div style="display:flex;background:var(--g1);border-radius:var(--rx);padding:3px;gap:2px" id="rendOrigSeg">
+            <button class="agg-btn on" data-orig="consolidado" onclick="setOrig(this)">Consolidado</button>
+            <button class="agg-btn"   data-orig="onshore"     onclick="setOrig(this)">Onshore</button>
+            <button class="agg-btn"   data-orig="offshore"    onclick="setOrig(this)">Offshore</button>
+          </div>
+        </div>
+        <!-- Moeda offshore (só aparece quando offshore selecionado) -->
+        <div id="rendMoedaWrap" style="display:none;align-items:center;gap:7px">
+          <span style="font-size:11px;font-weight:600;color:var(--g6);text-transform:uppercase;letter-spacing:.4px">Moeda</span>
+          <div style="display:flex;background:var(--g1);border-radius:var(--rx);padding:3px;gap:2px" id="rendMoedaSeg">
+            <button class="agg-btn on" data-moeda="brl" onclick="setMoeda(this)">BRL</button>
+            <button class="agg-btn"   data-moeda="usd" onclick="setUsd(this)">USD</button>
+          </div>
+        </div>
+        <!-- Visualização -->
+        <div style="display:flex;align-items:center;gap:7px">
+          <span style="font-size:11px;font-weight:600;color:var(--g6);text-transform:uppercase;letter-spacing:.4px">Visão</span>
+          <div style="display:flex;background:var(--g1);border-radius:var(--rx);padding:3px;gap:2px" id="rendVisSeg">
+            <button class="agg-btn on" data-vis="mensal"     onclick="setVis(this)">Mensal</button>
+            <button class="agg-btn"   data-vis="trimestral" onclick="setVis(this)">Trimestral</button>
+            <button class="agg-btn"   data-vis="anual"      onclick="setVis(this)">Anual</button>
+            <button class="agg-btn"   data-vis="acumulado"  onclick="setVis(this)">Acumulado</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-b">
+      <div class="ch-wrap" style="height:320px"><canvas id="rendChart"></canvas></div>
+    </div>
+  </div>
+
+
+  <!-- GRÁFICO % -->
+  <div class="card">
+    <div class="card-h">
+      <span class="card-t">Evolução Carteira em % | Oikos</span>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <!-- Origem (sem consolidado) -->
+        <div style="display:flex;align-items:center;gap:7px">
+          <span style="font-size:11px;font-weight:600;color:var(--g6);text-transform:uppercase;letter-spacing:.4px">Origem</span>
+          <div style="display:flex;background:var(--g1);border-radius:var(--rx);padding:3px;gap:2px" id="pctOrigSeg">
+            <button class="agg-btn on" data-orig="onshore"  onclick="setPctOrig(this)">Onshore</button>
+            <button class="agg-btn"   data-orig="offshore" onclick="setPctOrig(this)">Offshore</button>
+          </div>
+        </div>
+        <!-- Visão -->
+        <div style="display:flex;align-items:center;gap:7px">
+          <span style="font-size:11px;font-weight:600;color:var(--g6);text-transform:uppercase;letter-spacing:.4px">Visão</span>
+          <div style="display:flex;background:var(--g1);border-radius:var(--rx);padding:3px;gap:2px" id="pctVisSeg">
+            <button class="agg-btn on" data-vis="mensal"    onclick="setPctVis(this)">Mensal</button>
+            <button class="agg-btn"   data-vis="acumulado" onclick="setPctVis(this)">Acumulado</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-b">
+      <div id="pctBenchLabel" style="font-size:11px;color:var(--g4);margin-bottom:12px;display:flex;align-items:center;gap:6px">
+        <span>📊</span><span id="pctBenchText">Comparativo: CDI</span>
+      </div>
+      <div class="ch-wrap" style="height:320px"><canvas id="pctChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- MODAL ANOTAÇÃO RENDIMENTO -->
+  <div class="modal-ov" id="annotOv" onclick="closeAnnotBg(event)">
+    <div class="modal-box" style="max-width:420px">
+      <div class="modal-head">
+        <div class="modal-ttl" id="annotTitle">Anotação</div>
+        <button class="btn-x" onclick="closeAnnot()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="fg">
+          <label class="fl">Texto da anotação</label>
+          <input class="fi" id="annotInput" placeholder="Digite uma observação para este mês...">
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-cancel" id="annotDelBtn" onclick="deleteAnnot()" style="color:var(--red);border-color:rgba(192,57,43,.3)">Remover</button>
+        <button class="btn-cancel" onclick="closeAnnot()">Cancelar</button>
+        <button class="btn-ok" onclick="saveAnnot()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
 
 </main>
 <div class="modal-ov" id="modalOv" onclick="closeBg(event)">
@@ -366,15 +473,14 @@ function renderChart(data){
       ttEvsList.innerHTML=evs.map(e=>`<div style="margin-bottom:4px">${ICONE[e.type]||'⚪'} <strong style="color:rgba(255,255,255,.9)">${e.label}</strong>${e.desc?`<br><span style="font-size:10.5px;color:rgba(255,255,255,.5);padding-left:18px">${e.desc}</span>`:''}</div>`).join('');
       ttEvs.style.display='block';
     }else{ttEvs.style.display='none';}
-    const wrap=chart.canvas.parentElement;
-    const wRect=wrap.getBoundingClientRect();
-    const x=tooltip.caretX,y=tooltip.caretY;
+    // Fixed positioning: convert canvas-relative coords to viewport coords
+    const cRect=chart.canvas.getBoundingClientRect();
+    const ax=cRect.left+tooltip.caretX, ay=cRect.top+tooltip.caretY;
     const ttW=280;
-    const left=(x+ttW+16>wRect.width)?Math.max(0,x-ttW-10):x+10;
-    ttEl.style.left=left+'px';
-    ttEl.style.top=Math.max(0,y-30)+'px';
+    const left=(ax+ttW+16>window.innerWidth)?Math.max(0,ax-ttW-10):ax+10;
+    ttEl.style.left=Math.max(0,left)+'px';
+    ttEl.style.top=Math.max(0,ay-30)+'px';
     ttEl.style.display='block';
-    ttEl.style.pointerEvents='auto';
   }
 
   const ctx=document.getElementById('patriChart').getContext('2d');
@@ -392,7 +498,27 @@ function renderChart(data){
       }
     }
   });
-  ctx.canvas.addEventListener('mouseleave',()=>{ttEl.style.display='none';});
+  // Hide tooltip on canvas leave (with small delay for tooltip hover)
+  ctx.canvas.addEventListener('mouseleave', () => {
+    setTimeout(() => {
+      const tt = document.getElementById('htmlTooltip');
+      if (tt && !tt.matches(':hover')) tt.style.display = 'none';
+    }, 150);
+  });
+  const ttFixed = document.getElementById('htmlTooltip');
+  if (ttFixed) {
+    ttFixed.addEventListener('mouseleave', () => { ttFixed.style.display = 'none'; });
+  }
+  // Click on canvas bar opens add-event modal with date pre-filled
+  ctx.canvas.addEventListener('click', (e) => {
+    const pts = S.chart.getElementsAtEventForMode(e, 'nearest', {intersect:true}, false);
+    if (pts.length) {
+      const idx = pts[0].index;
+      const lbl = S.chart.data.labels[idx];
+      S.hoverLabel = lbl;
+      openModalForDate();
+    }
+  });
 }
 
 function dateVal(s){
@@ -423,6 +549,7 @@ function addEvento(){
 }
 let editing=false;
 function toggleEdit(){
+  if (!requireAdmin()) return;
   editing=!editing;
   const el=document.getElementById('commentArea');
   const be=document.getElementById('btnEdit');
@@ -442,6 +569,603 @@ function saveComment(){
 }
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&editing)saveComment();});
 function showErr(msg){document.getElementById('kpiRow').innerHTML=`<div class="kpi kn" style="grid-column:1/-1"><div class="sbox"><span style="font-size:28px">⚠️</span><p class="stitle">Erro ao carregar</p><p class="sdesc">${msg}</p></div></div>`;}
+
+// ================================================================
+// RENDIMENTO APLICAÇÕES FINANCEIRAS
+// ================================================================
+const REND_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ8Tn1EkuDlt8LIO0x5sFmwW4L6e6QFO_Z8YG87kkqs6n8JRsD59Yq8qMFBAX4Z0js4rxa28bMW5AAy/pub?gid=1718867210&single=true&output=csv';
+const MIRANTE_FIXO = 4495392;
+const RS = { rendRaw:[], rendChart:null, orig:'consolidado', vis:'mensal', moeda:'brl' };
+
+// ================================================================
+// EVOLUÇÃO CARTEIRA EM % — Oikos
+// ================================================================
+const PCT_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRWy5EaFe4g2Oe8Jia25-lgdK0fXji1BtwBjUYv0p3gza7OlJXQgfqdyQQ20gm3EyrKxabvsPj3_9k4/pub?gid=466821704&single=true&output=csv';
+
+// Datas de início de cada série
+const PCT_START_ON  = '2023-07'; // Onshore: Jul/23
+const PCT_START_OFF = '2025-05'; // Offshore: Mai/25
+
+const PS = { raw:[], chart:null, orig:'onshore', vis:'mensal' };
+
+async function loadPct() {
+  try {
+    const r = await fetch(PCT_URL);
+    if (!r.ok) throw new Error('Erro HTTP ' + r.status);
+    PS.raw = parseCSV(await r.text());
+    renderPct();
+  } catch(e) {
+    console.error('[PCT]', e.message);
+  }
+}
+
+// Extrai dados de rentabilidade %
+// Onshore: B=mensal(col1), D=acum(col3), E=CDI mensal(col4), G=CDI acum(col6)
+// Offshore: H=mensal(col7), J=acum(col9), L=T3M mensal(col11), N=T3M acum(col13)
+function extractPct() {
+  const rows = PS.raw;
+  if (!rows || rows.length < 2) return [];
+  const res = [];
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row || row.length < 2) continue;
+    const dateRaw = String(row[0] || '').trim();
+    if (!dateRaw || !rendParseDate(dateRaw)) continue;
+    const parsePct = v => {
+      if (!v) return null;
+      let s = String(v).replace('%','').replace(',','.').trim();
+      const n = parseFloat(s);
+      return isNaN(n) ? null : n;
+    };
+    res.push({
+      dateRaw,
+      label: fmtLabel(dateRaw),
+      ym: (() => { const d=rendParseDate(dateRaw); return d?`${d.y}-${String(d.mo).padStart(2,'0')}`:''; })(),
+      // Onshore
+      onMes:    parsePct(row[1]),   // B
+      onAcum:   parsePct(row[3]),   // D
+      cdiMes:   parsePct(row[4]),   // E
+      cdiAcum:  parsePct(row[6]),   // G
+      // Offshore
+      offMes:   parsePct(row[7]),   // H
+      offAcum:  parsePct(row[9]),   // J
+      t3mMes:   parsePct(row[11]),  // L
+      t3mAcum:  parsePct(row[13]), // N
+    });
+  }
+  return res;
+}
+
+function renderPct() {
+  const allData = extractPct();
+  if (!allData.length) return;
+
+  const isOff   = PS.orig === 'offshore';
+  const isAcum  = PS.vis  === 'acumulado';
+  const startYM = isOff ? PCT_START_OFF : PCT_START_ON;
+
+  // Filtra pelo período de início de cada série
+  const data = allData.filter(d => d.ym >= startYM && (isOff ? d.offMes !== null : d.onMes !== null));
+  if (!data.length) return;
+
+  const labels       = data.map(d => d.label);
+  const carteiraVals = isAcum
+    ? data.map(d => isOff ? d.offAcum  : d.onAcum)
+    : data.map(d => isOff ? d.offMes   : d.onMes);
+  const benchVals    = isAcum
+    ? data.map(d => isOff ? d.t3mAcum  : d.cdiAcum)
+    : data.map(d => isOff ? d.t3mMes   : d.cdiMes);
+
+  const benchName = isOff ? 'T-Bill 3M (EUA)' : 'CDI';
+  document.getElementById('pctBenchText').textContent = `Comparativo: ${benchName}`;
+
+  if (PS.chart) { PS.chart.destroy(); PS.chart = null; }
+
+  function fmtPct(v) {
+    if (v === null || v === undefined || isNaN(v)) return '—';
+    return (v >= 0 ? '+' : '') + v.toFixed(2) + '%';
+  }
+
+  const ctx = document.getElementById('pctChart').getContext('2d');
+
+  if (isAcum) {
+    // Acumulado: duas linhas
+    PS.chart = new Chart(ctx, {
+      type: 'line',
+      data: { labels, datasets: [
+        {
+          label: 'Carteira Oikos',
+          data: carteiraVals,
+          borderColor: isOff ? '#2980b9' : '#c4a35a',
+          backgroundColor: isOff ? 'rgba(41,128,185,.1)' : 'rgba(196,163,90,.1)',
+          borderWidth: 2.5, fill: true, tension: .35,
+          pointBackgroundColor: isOff ? '#2980b9' : '#c4a35a',
+          pointRadius: labels.length <= 30 ? 4 : 2, pointHoverRadius: 6,
+        },
+        {
+          label: benchName,
+          data: benchVals,
+          borderColor: '#27ae60',
+          backgroundColor: 'rgba(39,174,96,.05)',
+          borderWidth: 2, borderDash: [5,4], fill: false, tension: .35,
+          pointBackgroundColor: '#27ae60',
+          pointRadius: labels.length <= 30 ? 3 : 1, pointHoverRadius: 5,
+        }
+      ]},
+      options: pctChartOptions(labels, fmtPct, benchName, data, isOff, isAcum)
+    });
+  } else {
+    // Mensal: barras carteira + linha benchmark
+    PS.chart = new Chart(ctx, {
+      data: { labels, datasets: [
+        {
+          type: 'bar',
+          label: 'Carteira Oikos',
+          data: carteiraVals,
+          backgroundColor: carteiraVals.map(v =>
+            v === null ? 'transparent' :
+            v >= 0 ? (isOff ? 'rgba(41,128,185,.75)' : 'rgba(196,163,90,.8)')
+                   : (isOff ? 'rgba(93,173,226,.45)' : 'rgba(192,57,43,.6)')),
+          borderColor: carteiraVals.map(v =>
+            v === null ? 'transparent' :
+            v >= 0 ? (isOff ? '#2980b9' : '#c4a35a') : (isOff ? '#5dade2' : '#c0392b')),
+          borderWidth: 1, borderRadius: 4, order: 2,
+        },
+        {
+          type: 'line',
+          label: benchName,
+          data: benchVals,
+          borderColor: '#27ae60', borderWidth: 2,
+          pointBackgroundColor: '#27ae60',
+          pointRadius: labels.length <= 30 ? 3 : 1, pointHoverRadius: 5,
+          tension: .3, fill: false, order: 1,
+        }
+      ]},
+      options: pctChartOptions(labels, fmtPct, benchName, data, isOff, isAcum)
+    });
+  }
+}
+
+function pctChartOptions(labels, fmtPct, benchName, data, isOff, isAcum) {
+  return {
+    responsive: true, maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: {
+        position: 'top', align: 'end',
+        labels: { font: { family:'Outfit', size:12 }, padding:18, usePointStyle:true }
+      },
+      tooltip: {
+        backgroundColor: '#0c1528', titleColor: '#c4a35a',
+        bodyColor: 'rgba(255,255,255,.85)',
+        borderColor: 'rgba(196,163,90,.3)', borderWidth:1, padding:13,
+        callbacks: {
+          label: c => `  ${c.dataset.label}: ${fmtPct(c.parsed.y)}`,
+          afterBody: items => {
+            // Diferença carteira vs benchmark
+            const cartItem  = items.find(i => i.dataset.label === 'Carteira Oikos');
+            const benchItem = items.find(i => i.dataset.label === benchName);
+            if (!cartItem || !benchItem) return [];
+            const cv = cartItem.parsed.y, bv = benchItem.parsed.y;
+            if (cv === null || bv === null) return [];
+            const diff = cv - bv;
+            const sign = diff >= 0 ? '+' : '';
+            return [
+              '  ─────────────────────',
+              `  vs ${benchName}: ${sign}${diff.toFixed(2)}pp`
+            ];
+          }
+        }
+      }
+    },
+    scales: {
+      x: { grid:{display:false}, ticks:{font:{family:'DM Mono',size:10}, color:'#8b95aa', maxRotation:labels.length>20?45:0, autoSkip:labels.length>36 }},
+      y: { grid:{color:'rgba(0,0,0,.04)',drawTicks:false}, border:{display:false},
+        ticks:{ font:{family:'DM Mono',size:10.5}, color:'#8b95aa',
+          callback: v => (v>=0?'+':'')+v.toFixed(1)+'%' }}
+    }
+  };
+}
+
+// Controles
+function setPctOrig(btn) {
+  document.querySelectorAll('#pctOrigSeg .agg-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  PS.orig = btn.dataset.orig;
+  renderPct();
+}
+function setPctVis(btn) {
+  document.querySelectorAll('#pctVisSeg .agg-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  PS.vis = btn.dataset.vis;
+  renderPct();
+}
+
+// Carrega rendimento junto com patrimônio
+async function loadRend() {
+  try {
+    const r = await fetch(REND_URL);
+    if (!r.ok) throw new Error('Erro HTTP ' + r.status + ' em Rendimento');
+    RS.rendRaw = parseCSV(await r.text());
+    renderRend();
+  } catch(e) {
+    document.getElementById('rendKpiRow').innerHTML =
+      `<div class="kpi kn" style="grid-column:1/-1"><div class="sbox"><span style="font-size:24px">⚠️</span><p class="stitle">Erro ao carregar rendimento</p><p class="sdesc">${e.message}</p></div></div>`;
+  }
+}
+
+// Extrai dados de rendimento
+// Cols: A=Data, B=On período, C=On acum, D=Off período BRL, E=Off acum BRL, F=Off período USD, G=Off acum USD
+function extractRend() {
+  const rows = RS.rendRaw;
+  if (!rows || rows.length < 2) return [];
+  const res = [];
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row || row.length < 3) continue;
+    const dateRaw = String(row[0] || '').trim();
+    if (!dateRaw) continue;
+    // Pula linhas que não são datas válidas (ex: segunda linha de cabeçalho "Mês")
+    if (!rendParseDate(dateRaw)) continue;
+    res.push({
+      dateRaw,
+      label:     fmtLabel(dateRaw),
+      onPer:     parseBR(row[1]),           // B: onshore período
+      onAcum:    parseBR(row[2]),           // C: onshore acumulado
+      offPerBRL: row.length>3?parseBR(row[3]):0, // D: offshore período BRL
+      offAcumBRL:row.length>4?parseBR(row[4]):0, // E: offshore acumulado BRL
+      offPerUSD: row.length>5?parseBR(row[5]):0, // F: offshore período USD
+      offAcumUSD:row.length>6?parseBR(row[6]):0, // G: offshore acumulado USD
+    });
+  }
+  return res;
+}
+
+// Agrega rendimento por trimestre ou ano
+// Rendimento usa ÚLTIMO valor acumulado do período (C, E, G)
+// Para visão mensal (período), SOMA os valores do período (B, D, F)
+// Converte qualquer formato de data para {y, mo} — inclui "jun.-23"
+function rendParseDate(raw) {
+  const MO = {jan:1,fev:2,mar:3,abr:4,mai:5,jun:6,jul:7,ago:8,set:9,out:10,nov:11,dez:12,
+               feb:2,apr:4,may:5,aug:8,sep:9,oct:10,dec:12};
+  const s = String(raw).trim().toLowerCase();
+  let m;
+  // D/M/YYYY  ex: "1/3/2021"
+  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return { y:parseInt(m[3]), mo:parseInt(m[2]) };
+  // YYYY-MM  ex: "2021-03"
+  m = s.match(/^(\d{4})-(\d{2})/);
+  if (m) return { y:parseInt(m[1]), mo:parseInt(m[2]) };
+  // MM/YYYY  ex: "03/2021"
+  m = s.match(/^(\d{1,2})\/(\d{4})$/);
+  if (m) return { y:parseInt(m[2]), mo:parseInt(m[1]) };
+  // Extrai MMM e YY/YYYY de qualquer combinação de separadores
+  // Cobre: "jun.-23", "jun/23", "jun-23", "jun.23", "jun 23"
+  m = s.match(/^([a-z]{3})[^a-z0-9]*(\d{2,4})$/);
+  if (m && MO[m[1]]) {
+    const y = m[2].length === 2 ? 2000 + parseInt(m[2]) : parseInt(m[2]);
+    return { y, mo: MO[m[1]] };
+  }
+  return null;
+}
+
+function aggregateRend(data, vis) {
+  if (vis === 'mensal' || vis === 'acumulado') return data;
+
+  const groups = {}, keys = [];
+  for (const d of data) {
+    const dt = rendParseDate(d.dateRaw) || rendParseDate(d.label);
+    if (!dt) continue;
+    const { y, mo } = dt;
+    let key;
+    if (vis === 'trimestral') { const q = Math.ceil(mo/3); key = y + '-Q' + q; }
+    else key = String(y);
+
+    if (!groups[key]) {
+      groups[key] = {
+        dateRaw:key, label:key,
+        onPer:0, onAcum:d.onAcum,
+        offPerBRL:0, offAcumBRL:d.offAcumBRL,
+        offPerUSD:0, offAcumUSD:d.offAcumUSD
+      };
+      keys.push(key);
+    }
+    // Acumulados: sobrescreve com o último valor do período
+    groups[key].onAcum     = d.onAcum;
+    groups[key].offAcumBRL = d.offAcumBRL;
+    groups[key].offAcumUSD = d.offAcumUSD;
+    // Períodos: soma os meses
+    groups[key].onPer     += d.onPer;
+    groups[key].offPerBRL += d.offPerBRL;
+    groups[key].offPerUSD += d.offPerUSD;
+  }
+  return keys.map(k => ({ ...groups[k] }));
+}
+
+// Retorna array de valores para o gráfico conforme filtros
+// Retorna {datasets} para o gráfico — consolidado retorna 2 séries (stacked)
+function getRendDatasets(data, labels) {
+  const vis    = RS.vis;
+  const orig   = RS.orig;
+  const moeda  = RS.moeda;
+  const isAcum = vis === 'acumulado';
+  const isAcumOrLine = isAcum;
+
+  function colorsFor(values, base, neg) {
+    return values.map(v => v < 0 ? neg : base);
+  }
+
+  if (orig === 'onshore') {
+    const vals = data.map(d => isAcum ? d.onAcum : d.onPer);
+    return [{
+      label: 'Onshore (BRL)',
+      data: vals,
+      backgroundColor: isAcumOrLine ? 'rgba(26,39,68,.15)' : colorsFor(vals,'rgba(26,39,68,.82)','rgba(45,66,117,.5)'),
+      borderColor: '#1a2744', borderWidth: isAcumOrLine?2.5:1,
+      borderRadius: isAcumOrLine?0:5, fill: isAcumOrLine, tension:.35,
+      pointBackgroundColor:'#1a2744', pointRadius: isAcumOrLine?(labels.length<=30?3:1):0, pointHoverRadius:5,
+    }];
+  }
+  if (orig === 'offshore') {
+    const vals = moeda==='usd'
+      ? data.map(d => isAcum ? d.offAcumUSD : d.offPerUSD)
+      : data.map(d => isAcum ? d.offAcumBRL : d.offPerBRL);
+    return [{
+      label: `Offshore (${moeda.toUpperCase()})`,
+      data: vals,
+      backgroundColor: isAcumOrLine ? 'rgba(41,128,185,.15)' : colorsFor(vals,'rgba(41,128,185,.75)','rgba(93,173,226,.5)'),
+      borderColor: '#2980b9', borderWidth: isAcumOrLine?2.5:1,
+      borderRadius: isAcumOrLine?0:5, fill: isAcumOrLine, tension:.35,
+      pointBackgroundColor:'#2980b9', pointRadius: isAcumOrLine?(labels.length<=30?3:1):0, pointHoverRadius:5,
+    }];
+  }
+  // Consolidado: barras empilhadas onshore (navy) + offshore (azul)
+  const onVals  = data.map(d => isAcum ? d.onAcum  : d.onPer);
+  const offVals = data.map(d => isAcum ? d.offAcumBRL : d.offPerBRL);
+  if (isAcumOrLine) {
+    // Acumulado: linha única do total
+    const totVals = data.map(d => isAcum ? (d.onAcum + d.offAcumBRL) : (d.onPer + d.offPerBRL));
+    return [{
+      label: 'Consolidado (BRL)', data: totVals,
+      backgroundColor: 'rgba(196,163,90,.12)', borderColor: '#c4a35a', borderWidth:2.5,
+      fill:true, tension:.35, pointBackgroundColor:'#c4a35a',
+      pointRadius: labels.length<=30?3:1, pointHoverRadius:5,
+    }];
+  }
+  return [
+    {
+      label: 'Offshore (BRL)', data: offVals,
+      backgroundColor: colorsFor(offVals,'rgba(41,128,185,.75)','rgba(93,173,226,.45)'),
+      borderColor: '#2980b9', borderWidth:1, borderRadius:5, stack:'rend', order:2
+    },
+    {
+      label: 'Onshore (BRL)', data: onVals,
+      backgroundColor: colorsFor(onVals,'rgba(26,39,68,.82)','rgba(45,66,117,.5)'),
+      borderColor: '#1a2744', borderWidth:1, borderRadius:5, stack:'rend', order:2
+    },
+  ];
+}
+
+function renderRend() {
+  const allData = extractRend();
+  if (!allData.length) return;
+
+  // ── KPIs ────────────────────────────────────────────────────────
+  const last = allData[allData.length - 1];
+  const totalOikos = last.onAcum + last.offAcumBRL;
+
+  const totalFinanceiro = totalOikos + MIRANTE_FIXO;
+  const cdiSaved = localStorage.getItem('cv_rend_cdi') || 'XX';
+  document.getElementById('rendKpiRow').innerHTML = `
+    <div class="kpi kg">
+      <div class="kpi-lbl">Rendimento Financeiro Total</div>
+      <div class="kpi-val go">${fmtR(totalFinanceiro)}</div>
+      <div class="kpi-sub">Oikos + Mirante</div>
+    </div>
+    <div class="kpi kgr">
+      <div class="kpi-lbl">Rendimento Total Oikos</div>
+      <div class="kpi-val g">${fmtR(totalOikos)}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:5px;gap:8px">
+        <div class="kpi-sub">Onshore + Offshore BRL</div>
+        <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+          <span style="font-size:10.5px;color:var(--g4)">≡</span>
+          <span style="font-size:11px;color:var(--gold);font-weight:600;cursor:pointer" id="rendCdiVal" onclick="editCdi()" title="Clique para editar o percentual">
+            ${cdiSaved}% do CDI
+          </span>
+          <span style="font-size:10px;color:var(--g4);cursor:pointer" onclick="editCdi()">✏️</span>
+        </div>
+      </div>
+    </div>
+    <div class="kpi kn">
+      <div class="kpi-lbl">Rendimento Total Mirante</div>
+      <div class="kpi-val go">${fmtR(MIRANTE_FIXO)}</div>
+      <div class="kpi-sub">Valor fixo</div>
+    </div>`;
+
+  // ── Gráfico ──────────────────────────────────────────────────────
+  renderRendChart(allData);
+}
+
+function renderRendChart(allData) {
+  if (RS.rendChart) { RS.rendChart.destroy(); RS.rendChart = null; }
+
+  const aggData = aggregateRend(allData, RS.vis);
+  const labels   = aggData.map(d => d.label);
+  const isUSD    = RS.orig === 'offshore' && RS.moeda === 'usd';
+  const isAcum   = RS.vis === 'acumulado';
+  const datasets = getRendDatasets(aggData, labels);
+  const isStacked= RS.orig === 'consolidado' && !isAcum;
+
+  function fmtVal(v) {
+    if (v === null || v === undefined || isNaN(v)) return '—';
+    if (isUSD) return 'U$ ' + Math.abs(v).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0});
+    return fmtR(v);
+  }
+
+  const ctx = document.getElementById('rendChart').getContext('2d');
+  RS.rendChart = new Chart(ctx, {
+    type: isAcum ? 'line' : 'bar',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode:'index', intersect:false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor:'#0c1528', titleColor:'#c4a35a',
+          bodyColor:'rgba(255,255,255,.85)',
+          borderColor:'rgba(196,163,90,.3)', borderWidth:1, padding:12,
+          callbacks: {
+            label: c => `  ${c.dataset.label}: ${fmtVal(c.parsed.y)}`,
+            afterBody: items => {
+              const lbl = items[0]?.label;
+              if (!lbl) return [];
+              const notes = JSON.parse(localStorage.getItem('cv_rend_notes')||'{}');
+              const note = notes[lbl];
+              const lines = [''];
+              if (note) lines.push('  📝 ' + note);
+              lines.push('  ── clique para anotar ──');
+              return lines;
+            }
+          },
+          external: null
+        }
+      },
+      onClick: (evt, elements) => {
+        if (!elements.length) return;
+        const lbl = RS.rendChart.data.labels[elements[0].index];
+        rendAddNote(lbl);
+      },
+      scales: {
+        x: { stacked: isStacked, grid:{display:false}, ticks:{font:{family:'DM Mono',size:10},color:'#8b95aa', maxRotation:labels.length>20?45:0, autoSkip:labels.length>36 }},
+        y: { stacked: isStacked, grid:{color:'rgba(0,0,0,.04)',drawTicks:false}, border:{display:false},
+          ticks:{ font:{family:'DM Mono',size:10.5}, color:'#8b95aa',
+            callback: v => isUSD
+              ? (v>=1e6?`U$${(v/1e6).toFixed(1)}M`:v>=1e3?`U$${(v/1e3).toFixed(0)}k`:`U$${v}`)
+              : (v>=1e6?`R$${(v/1e6).toFixed(1)}M`:v>=1e3?`R$${(v/1e3).toFixed(0)}k`:fmtR(v)) }}
+      }
+    }
+  });
+}
+
+// ── Controles ────────────────────────────────────────────────────
+function setOrig(btn) {
+  document.querySelectorAll('#rendOrigSeg .agg-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  RS.orig = btn.dataset.orig;
+  // Mostra/esconde seletor de moeda
+  const mw = document.getElementById('rendMoedaWrap');
+  mw.style.display = RS.orig === 'offshore' ? 'flex' : 'none';
+  renderRendChart(extractRend());
+}
+
+function setMoeda(btn) {
+  document.querySelectorAll('#rendMoedaSeg .agg-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  RS.moeda = btn.dataset.moeda;
+  renderRendChart(extractRend());
+}
+
+function setUsd(btn) {
+  RS.moeda = 'usd';
+  setMoeda(btn);
+}
+
+function setVis(btn) {
+  document.querySelectorAll('#rendVisSeg .agg-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  RS.vis = btn.dataset.vis;
+  renderRendChart(extractRend());
+}
+
+// Anotação nos pontos do gráfico de rendimento
+let _annotLabel = null;
+function rendAddNote(label) {
+  _annotLabel = label;
+  const notes = JSON.parse(localStorage.getItem('cv_rend_notes')||'{}');
+  document.getElementById('annotTitle').textContent = 'Anotação — ' + label;
+  document.getElementById('annotInput').value = notes[label] || '';
+  document.getElementById('annotDelBtn').style.display = notes[label] ? 'inline-flex' : 'none';
+  document.getElementById('annotOv').classList.add('open');
+  setTimeout(() => document.getElementById('annotInput').focus(), 100);
+}
+function saveAnnot() {
+  if (!_annotLabel) return;
+  const notes = JSON.parse(localStorage.getItem('cv_rend_notes')||'{}');
+  const val = document.getElementById('annotInput').value.trim();
+  if (val) notes[_annotLabel] = val; else delete notes[_annotLabel];
+  localStorage.setItem('cv_rend_notes', JSON.stringify(notes));
+  if (RS.rendChart) RS.rendChart.update();
+  closeAnnot();
+}
+function deleteAnnot() {
+  if (!_annotLabel) return;
+  const notes = JSON.parse(localStorage.getItem('cv_rend_notes')||'{}');
+  delete notes[_annotLabel];
+  localStorage.setItem('cv_rend_notes', JSON.stringify(notes));
+  if (RS.rendChart) RS.rendChart.update();
+  closeAnnot();
+}
+function closeAnnot() { document.getElementById('annotOv').classList.remove('open'); _annotLabel = null; }
+function closeAnnotBg(e) { if (e.target.id === 'annotOv') closeAnnot(); }
+
+// CDI editável (apenas o número percentual)
+function editCdi() {
+  const cur = localStorage.getItem('cv_rend_cdi') || '';
+  const val = prompt('Informe o percentual do CDI (somente o número, ex: 112):', cur);
+  if (val !== null) {
+    const txt = val.trim() || 'XX';
+    const el = document.getElementById('rendCdiVal');
+    if (el) el.textContent = txt + '% do CDI';
+    localStorage.setItem('cv_rend_cdi', txt);
+  }
+}
+
+// Carrega rendimento após DOM ready
+document.addEventListener('DOMContentLoaded', () => { loadRend(); loadPct(); });
+
+// ================================================================
+// ADMIN CHECK — compartilhado com cv_home
+// ================================================================
+const ADMIN_KEY = 'cv_admin_session';
+function isAdmin() { return localStorage.getItem(ADMIN_KEY) === 'true'; }
+function requireAdmin(action) {
+  if (!isAdmin()) {
+    showAdminToast();
+    return false;
+  }
+  return true;
+}
+function showAdminToast() {
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#0c1528;color:#fff;padding:12px 22px;border-radius:10px;font-family:Outfit,sans-serif;font-size:13px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.25);border:1px solid rgba(196,163,90,.3);display:flex;align-items:center;gap:10px;';
+  t.innerHTML = '<span style="font-size:16px">🔒</span><span>Apenas administradores podem editar. Faça login na <a href="cv_home.html" style="color:#c4a35a">página inicial</a>.</span>';
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 4000);
+}
+// Show admin indicator if logged in
+document.addEventListener('DOMContentLoaded', () => {
+  if (isAdmin()) {
+    const bar = document.createElement('div');
+    bar.style.cssText = 'background:rgba(196,163,90,.12);border-bottom:1px solid rgba(196,163,90,.3);padding:6px 40px;display:flex;align-items:center;justify-content:space-between;';
+    bar.innerHTML = '<span style="font-size:11px;font-weight:600;color:#c4a35a;display:flex;align-items:center;gap:7px"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><rect x="3" y="7" width="10" height="8" rx="2" stroke="#c4a35a" stroke-width="1.5"/><path d="M5 7V5a3 3 0 0 1 6 0v2" stroke="#c4a35a" stroke-width="1.5" stroke-linecap="round"/></svg>Modo Administrador ativo</span><button onclick="localStorage.removeItem(ADMIN_KEY);location.reload()" style="padding:3px 11px;background:rgba(196,163,90,.15);color:#d4b86a;border:1px solid rgba(196,163,90,.3);border-radius:6px;font-family:Outfit,sans-serif;font-size:11px;cursor:pointer;">Sair</button>';
+    const hdr = document.querySelector('.hdr');
+    if (hdr) hdr.insertAdjacentElement('afterend', bar);
+  }
+});
+
 </script>
+<!-- TOOLTIP PATRIMÔNIO — fixed position, body-level -->
+<div id="htmlTooltip" style="display:none;position:fixed;z-index:9999;width:280px;
+  background:#0c1528;border:1px solid rgba(196,163,90,.3);border-radius:12px;
+  box-shadow:0 8px 28px rgba(12,21,40,.4);overflow:hidden;pointer-events:none;">
+  <div class="tt-head"><div class="tt-date" id="ttDate"></div><div class="tt-vals" id="ttVals"></div></div>
+  <div class="tt-evs" id="ttEvs"><div class="tt-evs-lbl">Eventos</div><div class="tt-evs-list" id="ttEvsList"></div></div>
+  <div class="tt-footer" style="pointer-events:auto">
+    <button class="tt-add-btn" onclick="openModalForDate()" style="font-size:11px;opacity:.7">
+      ✏️ Clique na barra para adicionar evento neste mês
+    </button>
+  </div>
+</div>
 </body>
 </html>

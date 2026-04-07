@@ -205,6 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ── Edição ───────────────────────────────────────────────────────
 function toggleEdit() {
+  if (!requireAdmin()) return;
   editing = !editing;
   const el   = document.getElementById('editorContent');
   const btnE = document.getElementById('btnEdit');
@@ -340,6 +341,37 @@ function showToast(msg) {
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 3000);
 }
+
+// ================================================================
+// ADMIN CHECK — compartilhado com cv_home
+// ================================================================
+const ADMIN_KEY = 'cv_admin_session';
+function isAdmin() { return localStorage.getItem(ADMIN_KEY) === 'true'; }
+function requireAdmin(action) {
+  if (!isAdmin()) {
+    showAdminToast();
+    return false;
+  }
+  return true;
+}
+function showAdminToast() {
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#0c1528;color:#fff;padding:12px 22px;border-radius:10px;font-family:Outfit,sans-serif;font-size:13px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.25);border:1px solid rgba(196,163,90,.3);display:flex;align-items:center;gap:10px;';
+  t.innerHTML = '<span style="font-size:16px">🔒</span><span>Apenas administradores podem editar. Faça login na <a href="cv_home.html" style="color:#c4a35a">página inicial</a>.</span>';
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 4000);
+}
+// Show admin indicator if logged in
+document.addEventListener('DOMContentLoaded', () => {
+  if (isAdmin()) {
+    const bar = document.createElement('div');
+    bar.style.cssText = 'background:rgba(196,163,90,.12);border-bottom:1px solid rgba(196,163,90,.3);padding:6px 40px;display:flex;align-items:center;justify-content:space-between;';
+    bar.innerHTML = '<span style="font-size:11px;font-weight:600;color:#c4a35a;display:flex;align-items:center;gap:7px"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><rect x="3" y="7" width="10" height="8" rx="2" stroke="#c4a35a" stroke-width="1.5"/><path d="M5 7V5a3 3 0 0 1 6 0v2" stroke="#c4a35a" stroke-width="1.5" stroke-linecap="round"/></svg>Modo Administrador ativo</span><button onclick="localStorage.removeItem(ADMIN_KEY);location.reload()" style="padding:3px 11px;background:rgba(196,163,90,.15);color:#d4b86a;border:1px solid rgba(196,163,90,.3);border-radius:6px;font-family:Outfit,sans-serif;font-size:11px;cursor:pointer;">Sair</button>';
+    const hdr = document.querySelector('.hdr');
+    if (hdr) hdr.insertAdjacentElement('afterend', bar);
+  }
+});
+
 </script>
 
 </body>

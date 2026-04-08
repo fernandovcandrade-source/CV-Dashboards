@@ -470,7 +470,19 @@ function renderChart(data){
     const ICONE={dist:'💛',brp:'🔴',off:'🔵',on:'🟤',other:'⚪'};
     const evs=getEventos().filter(e=>fmtLabel(e.date)===d.label||e.date===d.label);
     if(evs.length){
-      ttEvsList.innerHTML=evs.map(e=>`<div style="margin-bottom:4px">${ICONE[e.type]||'⚪'} <strong style="color:rgba(255,255,255,.9)">${e.label}</strong>${e.desc?`<br><span style="font-size:10.5px;color:rgba(255,255,255,.5);padding-left:18px">${e.desc}</span>`:''}</div>`).join('');
+      ttEvsList.innerHTML=evs.map((e,ei)=>{
+        const allEvs=getEventos();
+        const realIdx=allEvs.findIndex(ev=>ev.date===e.date&&ev.label===e.label);
+        return `<div style="margin-bottom:6px;display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+          <div>${ICONE[e.type]||'⚪'} <strong style="color:rgba(255,255,255,.9)">${e.label}</strong>${e.desc?`<br><span style="font-size:10.5px;color:rgba(255,255,255,.5);padding-left:18px">${e.desc}</span>`:''}</div>
+          <div id="ev-admin-btns-${realIdx}" style="display:none;gap:4px;flex-shrink:0">
+            <button onclick="editEvento(${realIdx})" style="padding:1px 7px;font-size:10px;background:rgba(196,163,90,.2);color:#c4a35a;border:1px solid rgba(196,163,90,.3);border-radius:4px;cursor:pointer;font-family:Outfit,sans-serif">✏️</button>
+            <button onclick="deleteEvento(${realIdx})" style="padding:1px 7px;font-size:10px;background:rgba(192,57,43,.2);color:#e74c3c;border:1px solid rgba(192,57,43,.3);border-radius:4px;cursor:pointer;font-family:Outfit,sans-serif">🗑</button>
+          </div>
+        </div>`;
+      }).join('');
+      // Show edit buttons only if admin
+      if(isAdmin()) ttEvsList.querySelectorAll('[id^="ev-admin-btns-"]').forEach(el=>el.style.display='flex');
       ttEvs.style.display='block';
     }else{ttEvs.style.display='none';}
     // Fixed positioning: convert canvas-relative coords to viewport coords
@@ -535,17 +547,53 @@ function getEventos(){
   return evs.sort((a,b)=>dateVal(b.date)-dateVal(a.date));
 }
 function saveEventos(evs){localStorage.setItem('cv_patri_eventos',JSON.stringify(evs));}
-function openModal(){['evDate','evLabel','evDesc'].forEach(id=>document.getElementById(id).value='');document.getElementById('evType').value='other';document.getElementById('modalOv').classList.add('open');document.getElementById('evDate').focus();}
-function openModalForDate(){document.getElementById('evDate').value=S.hoverLabel||'';document.getElementById('evLabel').value='';document.getElementById('evDesc').value='';document.getElementById('evType').value='other';document.getElementById('modalOv').classList.add('open');document.getElementById('evLabel').focus();}
-function closeModal(){document.getElementById('modalOv').classList.remove('open');}
+function openModal(){if(!isAdmin()){requireAdmin();return;}['evDate','evLabel','evDesc'].forEach(id=>document.getElementById(id).value='');document.getElementById('evType').value='other';document.getElementById('modalOv').classList.add('open');document.getElementById('evDate').focus();}
+function openModalForDate(){if(!isAdmin()){requireAdmin();return;}document.getElementById('evDate').value=S.hoverLabel||'';document.getElementById('evLabel').value='';document.getElementById('evDesc').value='';document.getElementById('evType').value='other';document.getElementById('modalOv').classList.add('open');document.getElementById('evLabel').focus();}
+function closeModal(){document.getElementById('modalOv').classList.remove('open');document.getElementById('modalOv').dataset.editIdx='-1';}
 function closeBg(e){if(e.target.id==='modalOv')closeModal();}
 function addEvento(){
   const date=document.getElementById('evDate').value.trim();
   const label=document.getElementById('evLabel').value.trim();
   const desc=document.getElementById('evDesc').value.trim();
   const type=document.getElementById('evType').value;
-  if(!date||!label){alert('Preencha Data e Título.');return;}
-  const evs=getEventos();evs.push({date,label,desc,type});saveEventos(evs);closeModal();
+  if(!date||!label){showToastPatri('Preencha Data e Título.');return;}
+  const evs=getEventos();
+  // Se modal estava editando um evento existente
+  const editIdx=parseInt(document.getElementById('modalOv').dataset.editIdx||'-1');
+  if(editIdx>=0){evs[editIdx]={date,label,desc,type};}
+  else{evs.push({date,label,desc,type});}
+  document.getElementById('modalOv').dataset.editIdx='-1';
+  saveEventos(evs);
+  if(S.chart) S.chart.update();
+  closeModal();
+}
+function editEvento(idx){
+  if(!isAdmin()){requireAdmin();return;}
+  const evs=getEventos();
+  const e=evs[idx]; if(!e) return;
+  document.getElementById('evDate').value=e.date||'';
+  document.getElementById('evLabel').value=e.label||'';
+  document.getElementById('evDesc').value=e.desc||'';
+  document.getElementById('evType').value=e.type||'other';
+  document.getElementById('modalOv').dataset.editIdx=idx;
+  // Update modal title
+  document.getElementById('modalOv').classList.add('open');
+  document.getElementById('evLabel').focus();
+}
+function deleteEvento(idx){
+  if(!isAdmin()){requireAdmin();return;}
+  const evs=getEventos();
+  if(!evs[idx]) return;
+  evs.splice(idx,1);
+  saveEventos(evs);
+  if(S.chart) S.chart.update();
+  showToastPatri('Evento removido.');
+}
+function showToastPatri(msg){
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#0c1528;color:#fff;padding:10px 20px;border-radius:10px;font-family:Outfit,sans-serif;font-size:13px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.25);border:1px solid rgba(196,163,90,.3)';
+  t.textContent=msg; document.body.appendChild(t);
+  setTimeout(()=>t.remove(),3000);
 }
 let editing=false;
 function toggleEdit(){
@@ -1081,6 +1129,7 @@ function setVis(btn) {
 // Anotação nos pontos do gráfico de rendimento
 let _annotLabel = null;
 function rendAddNote(label) {
+  if(!isAdmin()){requireAdmin();return;}
   _annotLabel = label;
   const notes = JSON.parse(localStorage.getItem('cv_rend_notes')||'{}');
   document.getElementById('annotTitle').textContent = 'Anotação — ' + label;

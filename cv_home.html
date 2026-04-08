@@ -552,6 +552,13 @@ body {
 
 <main class="main">
 
+  <!-- INTRO -->
+  <div style="background:linear-gradient(135deg,var(--navy3),var(--navy4));border-radius:var(--rl);padding:20px 26px;margin-bottom:28px;border:1px solid rgba(196,163,90,.2);box-shadow:var(--sh2)">
+    <p style="font-size:13.5px;color:rgba(255,255,255,.8);line-height:1.8">
+      Esta página tem como objetivo consolidar e dar transparência aos principais temas da Côrtes Velloso. Logo abaixo são apresentados os destaques, pontos de atenção e um breve resumo executivo, e logo abaixo os demais conteúdos detalhados, que estão organizados por tema, com acesso direto ao detalhamento completo clicando em cada um deles. As análises são suportadas por gráficos dinâmicos e interativos, permitindo diferentes leituras e aprofundamentos conforme a necessidade.
+    </p>
+  </div>
+
   <!-- DESTAQUES -->
   <div class="section-label">✦ Destaques do Mês</div>
 
@@ -772,12 +779,9 @@ function navTo(e, cardId) {
     showToast('Link ainda não configurado. Edite a seção LINKS no código.');
     return;
   }
-  // Demais Assuntos abre em nova aba
-  if (cardId === 'link-outros') {
-    e.preventDefault();
-    window.open(url, '_blank');
-  }
-  // Demais cards navegam normalmente (página do Google Sites)
+  // Todos os cards abrem em nova aba
+  e.preventDefault();
+  window.open(url, '_blank');
 }
 
 // ── Edição dos destaques ─────────────────────────────────────────
@@ -860,14 +864,28 @@ function clearFmt() {
 // ── Data editável nos cards ──────────────────────────────────────
 function editDate(key, e) {
   e.preventDefault(); e.stopPropagation();
+  if (!isAdmin()) { showToast('🔒 Apenas administradores podem editar. Faça login com duplo clique no logo.'); return; }
   const el = document.getElementById('date-'+key);
-  const current = el.textContent;
-  const val = prompt('Informe a base de atualização (ex: Fevereiro 2026):', current === 'Definir base' ? '' : current);
-  if (val !== null) {
-    const txt = val.trim() ? 'Base '+val.trim() : 'Definir base';
+  // Torna o span editável inline (sem prompt)
+  el.contentEditable = 'true';
+  el.style.outline = '1px dashed rgba(196,163,90,.6)';
+  el.style.borderRadius = '3px';
+  el.style.padding = '1px 4px';
+  el.focus();
+  // Seleciona tudo
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  window.getSelection().removeAllRanges();
+  window.getSelection().addRange(range);
+  el.onblur = () => {
+    el.contentEditable = 'false';
+    el.style.outline = '';
+    el.style.padding = '';
+    const txt = el.textContent.trim() || 'Definir base';
     el.textContent = txt;
     localStorage.setItem('cv_date_'+key, txt);
-  }
+  };
+  el.onkeydown = ev => { if (ev.key === 'Enter') { ev.preventDefault(); el.blur(); } };
 }
 
 

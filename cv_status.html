@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Côrtes Velloso — Status Loteamentos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0c1528;--navy2:#131f38;--navy3:#1a2744;--navy4:#213256;--navy5:#2d4275;
+  --gold:#c4a35a;--gold2:#d4b86a;--gold-bg:rgba(196,163,90,.10);--gold-bd:rgba(196,163,90,.25);
+  --white:#fff;--off:#f5f6f9;--g1:#eef0f5;--g2:#dde1ea;--g4:#8b95aa;--g6:#4f5a6e;--g9:#1a202c;
+  --green:#27ae60;--red:#c0392b;--blue:#2980b9;--orange:#e67e22;--teal:#16a085;--purple:#8e44ad;
+  --r:14px;--rl:20px;--rs:10px;--rx:6px;
+  --sh:0 1px 4px rgba(12,21,40,.08);--sh2:0 4px 16px rgba(12,21,40,.12);--tr:.18s ease;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Outfit',sans-serif;background:var(--off);color:var(--g9);min-height:100vh;-webkit-font-smoothing:antialiased;}
+.hdr{background:var(--navy);background-image:radial-gradient(ellipse at 15% 60%,rgba(196,163,90,.09) 0%,transparent 55%);padding:0 40px;height:72px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(196,163,90,.2);position:sticky;top:0;z-index:100;}
+.brand{display:flex;align-items:center;gap:16px;}
+.brand-ico{width:40px;height:40px;}
+.brand-name{font-family:'DM Serif Display',serif;font-size:18px;color:var(--white);}
+.brand-tag{font-size:10px;color:var(--gold);letter-spacing:1.4px;text-transform:uppercase;font-weight:500;margin-top:1px;}
+.hdr-right{display:flex;align-items:center;gap:16px;}
+.upd-label{font-size:10px;color:rgba(255,255,255,.38);text-transform:uppercase;letter-spacing:.6px;}
+.upd-time{font-size:12px;color:rgba(255,255,255,.7);font-family:'DM Mono',monospace;}
+.btn-ref{display:flex;align-items:center;gap:7px;padding:8px 18px;background:var(--gold);color:var(--navy);border:none;border-radius:var(--rs);font-family:'Outfit',sans-serif;font-size:12.5px;font-weight:600;cursor:pointer;transition:var(--tr);}
+.btn-ref:hover:not(:disabled){background:var(--gold2);transform:translateY(-1px);}
+.btn-ref:disabled{opacity:.55;cursor:not-allowed;}
+.ico{width:14px;height:14px;}
+.btn-ref.spin .ico{animation:rot .8s linear infinite;}
+@keyframes rot{to{transform:rotate(360deg);}}
+.hero{background:var(--navy3);background-image:radial-gradient(ellipse at 70% 50%,rgba(196,163,90,.07) 0%,transparent 60%);padding:28px 40px 22px;border-bottom:1px solid rgba(196,163,90,.15);}
+.hero-eye{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:6px;}
+.hero-title{font-family:'DM Serif Display',serif;font-size:26px;color:var(--white);line-height:1.2;margin-bottom:4px;}
+.hero-sub{font-size:13px;color:rgba(255,255,255,.4);}
+.main{padding:28px 40px 60px;max-width:1300px;margin:0 auto;}
+/* INTRO */
+.intro-card{background:linear-gradient(135deg,var(--navy3),var(--navy4));border-radius:var(--rl);padding:20px 26px;margin-bottom:26px;border:1px solid rgba(196,163,90,.2);box-shadow:var(--sh2);}
+.intro-card p{font-size:13.5px;color:rgba(255,255,255,.8);line-height:1.75;}
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:24px;}
+.kpi{background:var(--white);border-radius:var(--r);padding:18px 20px 16px;box-shadow:var(--sh);border:1px solid var(--g2);position:relative;overflow:hidden;transition:box-shadow var(--tr),transform var(--tr);}
+.kpi:hover{box-shadow:var(--sh2);transform:translateY(-2px);}
+.kpi::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px;}
+.kpi.kg::before{background:var(--gold);}.kpi.kgr::before{background:var(--green);}
+.kpi.kn::before{background:var(--navy4);}.kpi.kb::before{background:var(--blue);}
+.kpi.ko::before{background:var(--orange);}.kpi.kr::before{background:var(--red);}
+.kpi-lbl{font-size:10px;font-weight:600;color:var(--g4);text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px;}
+.kpi-val{font-family:'DM Mono',monospace;font-size:19px;font-weight:500;color:var(--g9);line-height:1.1;letter-spacing:-.5px;}
+.kpi-val.g{color:var(--green);}.kpi-val.go{color:var(--gold);}.kpi-val.b{color:var(--blue);}
+.kpi-sub{font-size:11px;color:var(--g4);margin-top:5px;}
+/* CARD */
+.card{background:var(--white);border-radius:var(--r);box-shadow:var(--sh);border:1px solid var(--g2);margin-bottom:22px;overflow:hidden;}
+.card-h{padding:14px 20px 13px;border-bottom:1px solid var(--g1);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.card-t{font-size:13.5px;font-weight:600;color:var(--g9);display:flex;align-items:center;gap:9px;}
+.card-t::before{content:'';display:block;width:3px;height:15px;background:var(--gold);border-radius:3px;flex-shrink:0;}
+.card-s{font-size:11.5px;color:var(--g4);}
+.card-b{padding:20px;}
+.ch-wrap{position:relative;height:320px;}
+/* TABELAS STATUS */
+.status-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.status-table-wrap{overflow:hidden;}
+.status-label{font-size:10.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--g4);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.status-label span{display:block;height:3px;width:24px;border-radius:3px;}
+.esta-color{background:var(--navy3);}
+.faze-color{background:var(--teal);}
+.st{width:100%;border-collapse:collapse;font-size:12.5px;}
+.st thead th{background:var(--navy3);color:var(--white);padding:9px 14px;font-size:11px;font-weight:500;text-align:right;white-space:nowrap;}
+.st thead th:first-child{text-align:left;}
+.st td{padding:9px 14px;text-align:right;border-bottom:1px solid var(--g1);font-family:'DM Mono',monospace;font-size:12px;white-space:nowrap;}
+.st td:first-child{text-align:left;font-family:'Outfit',sans-serif;font-size:12.5px;font-weight:500;}
+.st tbody tr:hover{background:var(--off);}
+.st .row-total td{background:var(--navy3);color:var(--white);font-weight:700;border-top:2px solid var(--gold);}
+.st .row-total td:first-child{font-family:'Outfit',sans-serif;}
+.pct-bar-wrap{display:flex;align-items:center;gap:6px;}
+.pct-bar{flex:1;height:5px;background:var(--g2);border-radius:99px;overflow:hidden;}
+.pct-fill{height:100%;border-radius:99px;}
+.tag{display:inline-block;padding:1px 7px;border-radius:4px;font-size:10.5px;font-weight:600;font-family:'Outfit',sans-serif;}
+/* DATE BASE */
+.date-base-wrap{display:flex;align-items:center;gap:8px;}
+.date-base-val{font-size:12px;color:var(--gold2);font-family:'DM Mono',monospace;font-weight:500;cursor:pointer;padding:3px 8px;background:var(--gold-bg);border:1px solid var(--gold-bd);border-radius:var(--rx);}
+.date-base-val:hover{background:rgba(196,163,90,.2);}
+/* CHARTS GRID */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+/* ESTADOS */
+.sbox{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 20px;gap:12px;color:var(--g4);}
+.spinner{width:32px;height:32px;border:3px solid var(--g2);border-top-color:var(--gold);border-radius:50%;animation:rot .75s linear infinite;}
+.stitle{font-size:14px;font-weight:600;color:var(--g6);}
+/* SECTION DIVIDER */
+.sec-div{font-size:10.5px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--g4);margin:28px 0 14px;display:flex;align-items:center;gap:10px;}
+.sec-div::after{content:'';flex:1;height:1px;background:var(--g2);}
+/* EDIT */
+.btn-edit-sm{padding:4px 10px;background:var(--gold-bg);color:var(--gold2);border:1px solid var(--gold-bd);border-radius:var(--rx);font-family:'Outfit',sans-serif;font-size:11px;font-weight:600;cursor:pointer;}
+@media(max-width:900px){.status-grid,.charts-grid{grid-template-columns:1fr;}}
+@media(max-width:768px){.hdr,.hero,.main{padding-left:16px;padding-right:16px;}}
+</style>
+</head>
+<body>
+<header class="hdr">
+  <div class="brand" ondblclick="openAdminModal()" title="Duplo clique para modo admin">
+    <svg class="brand-ico" viewBox="0 0 40 40" fill="none"><rect width="40" height="40" rx="9" fill="#1a2744"/><path d="M20 7L33 18V34H26V25H14V34H7V18L20 7Z" stroke="#c4a35a" stroke-width="1.5" fill="none" stroke-linejoin="round"/><line x1="14" y1="25" x2="26" y2="25" stroke="#c4a35a" stroke-width="1.5"/></svg>
+    <div><div class="brand-name">Côrtes Velloso</div><div class="brand-tag">Empreendimentos Imobiliários · Est. 2009</div></div>
+  </div>
+  <div class="hdr-right">
+    <div><div class="upd-label">Última atualização</div><div class="upd-time" id="lastUpdate">—</div></div>
+    <button class="btn-ref" id="btnRef" onclick="loadAll()">
+      <svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 8A6 6 0 1 1 8 2" stroke-linecap="round"/><polyline points="8,2 11,2 11,5" fill="currentColor" stroke="none"/></svg>
+      Atualizar Dados
+    </button>
+  </div>
+</header>
+<div class="hero">
+  <div class="hero-eye">Painel de Gestão</div>
+  <div class="hero-title">🗺️ Status Loteamentos</div>
+  <div class="hero-sub">ESTA — Terras da Estância · FAZE — Terras da Fazenda</div>
+</div>
+<main class="main">
+
+  <!-- INTRO -->
+  <div class="intro-card">
+    <p>Visão consolidada da carteira de lotes, com classificação entre vendidos, disponíveis e demais classificações, segmentada por empreendimento (ESTA e FAZE). Em seguida, são apresentados indicadores de evolução dos lotes quitados ao longo do tempo e a trajetória dos preços de venda dos lotes.</p>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-row" id="kpiRow">
+    <div class="kpi kn" style="grid-column:1/-1"><div class="sbox"><div class="spinner"></div><p class="stitle">Carregando dados...</p></div></div>
+  </div>
+
+  <!-- 1. STATUS CARTEIRA -->
+  <div class="sec-div">1 · Status da Carteira de Lotes</div>
+  <div class="card">
+    <div class="card-h">
+      <span class="card-t">Composição da Carteira</span>
+      <div class="date-base-wrap">
+        <span style="font-size:11.5px;color:var(--g4)">Base:</span>
+        <span class="date-base-val" id="dateBaseVal" onclick="editDateBase()" title="Clique para editar a data base">—</span>
+        <button class="btn-edit-sm" onclick="editDateBase()">✏️</button>
+      </div>
+    </div>
+    <div class="card-b">
+      <div class="status-grid" id="statusGrid">
+        <div class="sbox"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. LOTES QUITADOS -->
+  <div class="sec-div">2 · Evolução de Lotes Quitados</div>
+  <div class="charts-grid">
+    <div class="card">
+      <div class="card-h">
+        <span class="card-t">Lotes Quitados · ESTA</span>
+        <span class="card-s" id="quitEstaSub">—</span>
+      </div>
+      <div class="card-b"><div class="ch-wrap"><canvas id="quitEstaChart"></canvas></div></div>
+    </div>
+    <div class="card">
+      <div class="card-h">
+        <span class="card-t">Lotes Quitados · FAZE</span>
+        <span class="card-s" id="quitFazeSub">—</span>
+      </div>
+      <div class="card-b"><div class="ch-wrap"><canvas id="quitFazeChart"></canvas></div></div>
+    </div>
+  </div>
+
+  <!-- 3. PREÇO DE VENDA -->
+  <div class="sec-div">3 · Evolução do Preço de Venda</div>
+  <div class="card">
+    <div class="card-h">
+      <span class="card-t">Preço de Venda por m² — ESTA & FAZE</span>
+      <span class="card-s" id="precoSub">—</span>
+    </div>
+    <div class="card-b"><div class="ch-wrap" style="height:300px"><canvas id="precoChart"></canvas></div></div>
+  </div>
+
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSr2XEs89484QiZOt1N4V3bAyLhA78SL0YUR0BZykLAGrJTNTyVFk-M-4qyDkB2pYhfpDw8-oP6cu2I/pub?gid=722476075&single=true&output=csv';
+const LOTES_ESTA = 1113, LOTES_FAZE = 873;
+
+// Cores por status
+const STATUS_COLORS = {
+  'Vendido':      { bg:'rgba(39,174,96,.85)',   border:'#27ae60',  fill:'#27ae60' },
+  'Disponível':   { bg:'rgba(41,128,185,.85)',  border:'#2980b9',  fill:'#2980b9' },
+  'Permuta':      { bg:'rgba(142,68,173,.75)',  border:'#8e44ad',  fill:'#8e44ad' },
+  'Distrato':     { bg:'rgba(192,57,43,.75)',   border:'#c0392b',  fill:'#c0392b' },
+  'Doação':       { bg:'rgba(230,126,34,.75)',  border:'#e67e22',  fill:'#e67e22' },
+  'Assessoria':   { bg:'rgba(189,195,199,.75)', border:'#95a5a6',  fill:'#95a5a6' },
+  'default':      { bg:'rgba(139,149,170,.7)',  border:'#8b95aa',  fill:'#8b95aa' },
+};
+
+const S = { raw:[], charts:{} };
+
+document.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('cv_status_datebase');
+  document.getElementById('dateBaseVal').textContent = saved || 'Definir data base';
+  loadAll();
+});
+
+async function loadAll() {
+  const btn = document.getElementById('btnRef');
+  btn.disabled = true; btn.classList.add('spin');
+  try {
+    const r = await fetch(CSV_URL);
+    if (!r.ok) throw new Error('Erro HTTP ' + r.status);
+    S.raw = parseCSV(await r.text());
+    render();
+    document.getElementById('lastUpdate').textContent =
+      new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  } catch(e) {
+    document.getElementById('kpiRow').innerHTML =
+      `<div class="kpi kn" style="grid-column:1/-1"><div class="sbox"><span style="font-size:28px">⚠️</span><p class="stitle">Erro ao carregar</p><p style="font-size:12px;color:var(--g4)">${e.message}</p></div></div>`;
+  } finally {
+    btn.disabled = false; btn.classList.remove('spin');
+    btn.innerHTML = `<svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 8A6 6 0 1 1 8 2" stroke-linecap="round"/><polyline points="8,2 11,2 11,5" fill="currentColor" stroke="none"/></svg> Atualizar Dados`;
+  }
+}
+
+function parseCSV(txt) {
+  const raw = txt.replace(/^\uFEFF/,'').trim();
+  const lines = raw.split(/\r?\n/);
+  const sep = (lines[0].match(/;/g)||[]).length > (lines[0].match(/,/g)||[]).length ? ';':',';
+  return lines.filter(l=>l.trim()).map(l=>splitLine(l,sep));
+}
+function splitLine(line,sep) {
+  const cols=[];let cur='',inQ=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}
+    else if(c===sep&&!inQ){cols.push(cur.trim());cur='';}
+    else cur+=c;
+  }
+  cols.push(cur.trim());return cols;
+}
+function parseBR(v) {
+  if(!v) return 0;
+  let s=String(v).replace(/R\$\s?/gi,'').replace(/\s/g,'').trim();
+  if(!s||s==='-') return 0;
+  if(/\d\.\d{3},/.test(s)) s=s.replace(/\./g,'').replace(',','.');
+  else if(/\.\d{3}$/.test(s)) s=s.replace(/\./g,'');
+  else if(s.includes(',')) s=s.replace(/\./g,'').replace(',','.');
+  const n=parseFloat(s); return isNaN(n)?0:n;
+}
+function parsePct(v) {
+  if(!v) return 0;
+  let s=String(v).replace('%','').replace(',','.').trim();
+  const n=parseFloat(s); return isNaN(n)?0:n;
+}
+function fmtR(v) {
+  if(!v&&v!==0) return '—';
+  const abs=Math.abs(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:0,maximumFractionDigits:0});
+  return v<0?'-'+abs:abs;
+}
+function fmtN(v) { return Math.round(v||0).toLocaleString('pt-BR'); }
+function fmtPct(v) { if(v===null||v===undefined||isNaN(v)) return '—'; return (+v).toFixed(1)+'%'; }
+function toYM(raw) {
+  const s=String(raw||'').trim();
+  if(!s) return '';
+  let m;
+  m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(m) return m[3]+'-'+String(parseInt(m[2])).padStart(2,'0');
+  m=s.match(/^(\d{4})-(\d{2})/);
+  if(m) return m[1]+'-'+m[2];
+  m=s.match(/^(\d{1,2})\/(\d{4})$/);
+  if(m) return m[2]+'-'+String(parseInt(m[1])).padStart(2,'0');
+  const MO={jan:'01',fev:'02',mar:'03',abr:'04',mai:'05',jun:'06',jul:'07',ago:'08',set:'09',out:'10',nov:'11',dez:'12',
+            feb:'02',apr:'04',may:'05',aug:'08',sep:'09',oct:'10',dec:'12'};
+  m=s.toLowerCase().match(/^([a-z]{3})[^a-z0-9]*(\d{2,4})$/);
+  if(m&&MO[m[1]]) return (m[2].length===2?'20'+m[2]:m[2])+'-'+MO[m[1]];
+  return '';
+}
+function fmtLabel(ym) {
+  if(!ym) return '—';
+  const [y,mo]=ym.split('-');
+  const MN=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  return MN[+mo-1]+'/'+y.slice(2);
+}
+
+// ================================================================
+// EXTRAÇÃO
+// ================================================================
+function extractStatus() {
+  // Dados a partir da linha 4 (índice 3)
+  // ESTA: B=1,C=2(val),D=3(qtd),E=4(%)  FAZE: G=6,H=7(val),I=8(qtd),J=9(%)
+  const rows=S.raw, esta=[], faze=[];
+  for(let i=3;i<rows.length;i++){
+    const row=rows[i]; if(!row||row.length<2) continue;
+    const estStatus=String(row[1]||'').trim();
+    // Ignora linhas de total (já calculado pelo código)
+    if(estStatus && estStatus.toLowerCase()!=='total') esta.push({status:estStatus, val:parseBR(row[2]), qtd:parseBR(row[3]), pct:parsePct(row[4])});
+    const fazStatus=String(row[6]||'').trim();
+    if(fazStatus && fazStatus.toLowerCase()!=='total') faze.push({status:fazStatus, val:parseBR(row[7]), qtd:parseBR(row[8]), pct:parsePct(row[9])});
+  }
+  return {esta,faze};
+}
+
+function extractQuitados() {
+  // Col N=13(data), O=14(esta qtd), P=15(faze qtd)
+  const rows=S.raw, res=[];
+  for(let i=3;i<rows.length;i++){
+    const row=rows[i]; if(!row||row.length<14) continue;
+    const ym=toYM(row[13]); if(!ym) continue;
+    const esta=parseBR(row[14]), faze=parseBR(row[15]);
+    if(!esta&&!faze) continue;
+    res.push({ym,label:fmtLabel(ym),esta,faze});
+  }
+  return res.sort((a,b)=>a.ym.localeCompare(b.ym));
+}
+
+function extractPreco() {
+  // Col T=19(data), U=20(esta), V=21(faze)
+  const rows=S.raw, res=[];
+  for(let i=3;i<rows.length;i++){
+    const row=rows[i]; if(!row||row.length<20) continue;
+    const ym=toYM(row[19]); if(!ym) continue;
+    const esta=parseBR(row[20]), faze=parseBR(row[21]);
+    if(!esta&&!faze) continue;
+    res.push({ym,label:fmtLabel(ym),esta,faze});
+  }
+  return res.sort((a,b)=>a.ym.localeCompare(b.ym));
+}
+
+// ================================================================
+// RENDER PRINCIPAL
+// ================================================================
+function render() {
+  try { renderKPIs();      } catch(e){ console.error('[KPIs]',e); }
+  try { renderStatus();    } catch(e){ console.error('[Status]',e); }
+  try { renderQuitados();  } catch(e){ console.error('[Quitados]',e); }
+  try { renderPreco();     } catch(e){ console.error('[Preco]',e); }
+}
+
+// ================================================================
+// KPIs
+// ================================================================
+function renderKPIs() {
+  const {esta,faze} = extractStatus();
+  // KPI 1: % Lotes Vendidos — vendidos/(vendidos+disponíveis)
+  const eVend = esta.find(r=>r.status.toLowerCase().includes('vendid'));
+  const eDisp = esta.find(r=>r.status.toLowerCase().includes('dispon'));
+  const fVend = faze.find(r=>r.status.toLowerCase().includes('vendid'));
+  const fDisp = faze.find(r=>r.status.toLowerCase().includes('dispon'));
+  const eVendQtd = eVend?.qtd||0, eDispQtd = eDisp?.qtd||0;
+  const fVendQtd = fVend?.qtd||0, fDispQtd = fDisp?.qtd||0;
+  const ePctVend = (eVendQtd+eDispQtd)>0 ? (eVendQtd/(eVendQtd+eDispQtd))*100 : 0;
+  const fPctVend = (fVendQtd+fDispQtd)>0 ? (fVendQtd/(fVendQtd+fDispQtd))*100 : 0;
+  const totPctVend = ((eVendQtd+fVendQtd)/(eVendQtd+eDispQtd+fVendQtd+fDispQtd))*100;
+
+  // KPI 2: Lotes Quitados vs Destinados
+  const qData = extractQuitados();
+  const lastQ = qData[qData.length-1];
+  const qEsta = lastQ?.esta||0, qFaze = lastQ?.faze||0;
+  const pctQEsta = LOTES_ESTA>0?(qEsta/LOTES_ESTA)*100:0;
+  const pctQFaze = LOTES_FAZE>0?(qFaze/LOTES_FAZE)*100:0;
+
+  document.getElementById('kpiRow').innerHTML =
+    `<div class="kpi kg">
+      <div class="kpi-lbl">Taxa de Vendas da Carteira</div>
+      <div class="kpi-val go">${fmtPct(totPctVend)}</div>
+      <div class="kpi-sub">ESTA: ${fmtPct(ePctVend)} · FAZE: ${fmtPct(fPctVend)}</div>
+    </div>
+    <div class="kpi kgr">
+      <div class="kpi-lbl">Lotes Vendidos · ESTA</div>
+      <div class="kpi-val g">${fmtN(eVendQtd)}</div>
+      <div class="kpi-sub">de ${fmtN(eVendQtd+eDispQtd)} disponíveis para venda</div>
+    </div>
+    <div class="kpi kb">
+      <div class="kpi-lbl">Lotes Vendidos · FAZE</div>
+      <div class="kpi-val b">${fmtN(fVendQtd)}</div>
+      <div class="kpi-sub">de ${fmtN(fVendQtd+fDispQtd)} disponíveis para venda</div>
+    </div>
+    <div class="kpi kn">
+      <div class="kpi-lbl">Lotes Quitados · ESTA</div>
+      <div class="kpi-val">${fmtN(qEsta)} <span style="font-size:13px;color:var(--g4)">/ ${LOTES_ESTA}</span></div>
+      <div class="kpi-sub">${fmtPct(pctQEsta)} do total destinado</div>
+    </div>
+    <div class="kpi kn">
+      <div class="kpi-lbl">Lotes Quitados · FAZE</div>
+      <div class="kpi-val">${fmtN(qFaze)} <span style="font-size:13px;color:var(--g4)">/ ${LOTES_FAZE}</span></div>
+      <div class="kpi-sub">${fmtPct(pctQFaze)} do total destinado</div>
+    </div>`;
+}
+
+// ================================================================
+// TABELAS STATUS
+// ================================================================
+function renderStatus() {
+  const {esta,faze} = extractStatus();
+  if(!esta.length && !faze.length) {
+    document.getElementById('statusGrid').innerHTML = '<div class="sbox"><p class="stitle">Sem dados</p></div>';
+    return;
+  }
+  document.getElementById('statusGrid').innerHTML =
+    buildStatusTable(esta,'ESTA','esta-color','#1a2744') +
+    buildStatusTable(faze,'FAZE','faze-color','#16a085');
+}
+
+function buildStatusTable(rows, label, colorClass, accentColor) {
+  const totalQtd = rows.reduce((s,r)=>s+r.qtd,0);
+  const totalVal = rows.reduce((s,r)=>s+r.val,0);
+
+  let html = `<div class="status-table-wrap">
+    <div class="status-label"><span class="${colorClass}"></span>${label}</div>
+    <table class="st">
+      <thead><tr>
+        <th>Status</th>
+        <th>Valor</th>
+        <th style="text-align:center">Qtd</th>
+        <th style="text-align:center">%</th>
+      </tr></thead><tbody>`;
+
+  rows.forEach(r => {
+    const col = STATUS_COLORS[r.status] || STATUS_COLORS.default;
+    html += `<tr>
+      <td style="display:flex;align-items:center;gap:8px">
+        <span style="width:8px;height:8px;border-radius:50%;background:${col.fill};flex-shrink:0;display:inline-block"></span>
+        ${r.status}
+      </td>
+      <td>${fmtR(r.val)}</td>
+      <td style="text-align:center">
+        <div class="pct-bar-wrap">
+          <span style="min-width:30px;text-align:right">${fmtN(r.qtd)}</span>
+          <div class="pct-bar"><div class="pct-fill" style="width:${r.pct}%;background:${col.fill}"></div></div>
+        </div>
+      </td>
+      <td style="text-align:center;color:${col.fill};font-weight:600">${fmtPct(r.pct)}</td>
+    </tr>`;
+  });
+
+  html += `</tbody><tfoot><tr class="row-total">
+    <td>Total</td>
+    <td>${fmtR(totalVal)}</td>
+    <td style="text-align:center">${fmtN(totalQtd)}</td>
+    <td style="text-align:center">100%</td>
+  </tr></tfoot></table></div>`;
+  return html;
+}
+
+// ================================================================
+// GRÁFICOS LOTES QUITADOS
+// ================================================================
+function renderQuitados() {
+  const data = extractQuitados();
+  if(!data.length) return;
+  const labels = data.map(d=>d.label);
+  const lastE = data[data.length-1]?.esta||0;
+  const lastF = data[data.length-1]?.faze||0;
+  const pctE = fmtPct((lastE/LOTES_ESTA)*100);
+  const pctF = fmtPct((lastF/LOTES_FAZE)*100);
+  document.getElementById('quitEstaSub').textContent = `${fmtN(lastE)} de ${LOTES_ESTA} lotes (${pctE})`;
+  document.getElementById('quitFazeSub').textContent = `${fmtN(lastF)} de ${LOTES_FAZE} lotes (${pctF})`;
+
+  function makeQuitChart(canvasId, vals, total, color, border) {
+    if(S.charts[canvasId]) { S.charts[canvasId].destroy(); delete S.charts[canvasId]; }
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    S.charts[canvasId] = new Chart(ctx, {
+      type:'line',
+      data:{ labels, datasets:[
+        { label:'Lotes Quitados', data:vals, borderColor:border, backgroundColor:color.replace('.85','.15'),
+          borderWidth:2.5, fill:true, tension:.3,
+          pointBackgroundColor:border, pointRadius:vals.length<=24?3:1, pointHoverRadius:6 },
+        // Linha horizontal do total
+        { label:`Total Destinado (${total})`, data:Array(labels.length).fill(total),
+          borderColor:'rgba(196,163,90,.6)', borderWidth:1.5, borderDash:[5,4],
+          pointRadius:0, fill:false, tension:0 }
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        interaction:{mode:'index',intersect:false},
+        plugins:{
+          legend:{position:'top',align:'end',labels:{font:{family:'Outfit',size:11},padding:12,usePointStyle:true}},
+          tooltip:{backgroundColor:'#0c1528',titleColor:'#c4a35a',bodyColor:'rgba(255,255,255,.85)',
+            borderColor:'rgba(196,163,90,.3)',borderWidth:1,padding:12,
+            callbacks:{
+              label:c=>{
+                if(c.dataset.label.includes('Total')) return `  Total destinado: ${fmtN(total)} lotes`;
+                const pct = ((c.parsed.y/total)*100).toFixed(1);
+                return `  Quitados: ${fmtN(c.parsed.y)} (${pct}%)`;
+              }
+            }}
+        },
+        scales:{
+          x:{grid:{display:false},ticks:{font:{family:'DM Mono',size:10},color:'#8b95aa',maxRotation:data.length>20?45:0}},
+          y:{min:0,max:Math.ceil(total*1.05),grid:{color:'rgba(0,0,0,.04)',drawTicks:false},border:{display:false},
+            ticks:{font:{family:'DM Mono',size:10.5},color:'#8b95aa',callback:v=>fmtN(v)}}
+        }}
+    });
+  }
+
+  makeQuitChart('quitEstaChart', data.map(d=>d.esta), LOTES_ESTA, 'rgba(26,39,68,.85)', '#1a2744');
+  makeQuitChart('quitFazeChart', data.map(d=>d.faze), LOTES_FAZE, 'rgba(22,160,133,.8)', '#16a085');
+}
+
+// ================================================================
+// GRÁFICO PREÇO DE VENDA
+// ================================================================
+function renderPreco() {
+  const data = extractPreco();
+  if(!data.length) return;
+  if(S.charts.preco) { S.charts.preco.destroy(); delete S.charts.preco; }
+
+  const labels = data.map(d=>d.label);
+  const lastE = data[data.length-1]?.esta;
+  const lastF = data[data.length-1]?.faze;
+  document.getElementById('precoSub').textContent =
+    `Preço atual — ESTA: ${fmtR(lastE)}/m² · FAZE: ${fmtR(lastF)}/m²`;
+
+  // Destaca o último ponto como "atual"
+  const ptRadiusEsta = data.map((_,i)=> i===data.length-1 ? 7 : (data.length<=24?3:1));
+  const ptRadiusFaze = data.map((_,i)=> i===data.length-1 ? 7 : (data.length<=24?3:1));
+
+  const ctx = document.getElementById('precoChart').getContext('2d');
+  S.charts.preco = new Chart(ctx,{
+    type:'line',
+    data:{labels,datasets:[
+      { label:'ESTA', data:data.map(d=>d.esta),
+        borderColor:'#1a2744', backgroundColor:'rgba(26,39,68,.1)',
+        borderWidth:2.5, fill:false, tension:.3,
+        pointBackgroundColor: data.map((_,i)=>i===data.length-1?'#c4a35a':'#1a2744'),
+        pointRadius:ptRadiusEsta, pointHoverRadius:7 },
+      { label:'FAZE', data:data.map(d=>d.faze),
+        borderColor:'#16a085', backgroundColor:'rgba(22,160,133,.1)',
+        borderWidth:2.5, fill:false, tension:.3,
+        pointBackgroundColor: data.map((_,i)=>i===data.length-1?'#c4a35a':'#16a085'),
+        pointRadius:ptRadiusFaze, pointHoverRadius:7 },
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{position:'top',align:'end',labels:{font:{family:'Outfit',size:12},padding:16,usePointStyle:true}},
+        tooltip:{backgroundColor:'#0c1528',titleColor:'#c4a35a',bodyColor:'rgba(255,255,255,.85)',
+          borderColor:'rgba(196,163,90,.3)',borderWidth:1,padding:12,
+          callbacks:{
+            label:c=>{
+              const isLast = c.dataIndex===data.length-1;
+              return `  ${c.dataset.label}: ${fmtR(c.parsed.y)}/m²${isLast?' ← preço atual':''}`;
+            }
+          }
+        }
+      },
+      scales:{
+        x:{grid:{display:false},ticks:{font:{family:'DM Mono',size:10},color:'#8b95aa',maxRotation:data.length>20?45:0}},
+        y:{grid:{color:'rgba(0,0,0,.04)',drawTicks:false},border:{display:false},
+          ticks:{font:{family:'DM Mono',size:10.5},color:'#8b95aa',
+            callback:v=>v>=1000?`R$${(v/1000).toFixed(0)}k`:fmtR(v)}}
+      }
+    }
+  });
+}
+
+// ================================================================
+// DATA BASE EDITÁVEL
+// ================================================================
+function editDateBase() {
+  if (!isAdmin()) { showAdminToast(); return; }
+  const cur = localStorage.getItem('cv_status_datebase') || '';
+  const el = document.getElementById('dateBaseVal');
+  el.contentEditable = 'true';
+  el.focus();
+  el.style.minWidth = '120px';
+  el.onblur = () => {
+    el.contentEditable = 'false';
+    localStorage.setItem('cv_status_datebase', el.textContent.trim());
+    el.onblur = null;
+  };
+  el.onkeydown = e => { if(e.key==='Enter'){ e.preventDefault(); el.blur(); } };
+}
+
+// ================================================================
+// ADMIN CHECK
+// ================================================================
+const ADMIN_KEY = 'cv_admin_session';
+function isAdmin() { return localStorage.getItem(ADMIN_KEY) === 'true'; }
+function showAdminToast() {
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#0c1528;color:#fff;padding:12px 22px;border-radius:10px;font-family:Outfit,sans-serif;font-size:13px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.25);border:1px solid rgba(196,163,90,.3);display:flex;align-items:center;gap:10px;';
+  t.innerHTML = '<span style="font-size:16px">🔒</span><span>Apenas administradores podem editar. Faça login na <a href="cv_home.html" style="color:#c4a35a">página inicial</a>.</span>';
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 4000);
+}
+document.addEventListener('DOMContentLoaded', () => {
+  if (isAdmin()) {
+    const bar = document.createElement('div');
+    bar.style.cssText = 'background:rgba(196,163,90,.12);border-bottom:1px solid rgba(196,163,90,.3);padding:6px 40px;display:flex;align-items:center;justify-content:space-between;';
+    bar.innerHTML = '<span style="font-size:11px;font-weight:600;color:#c4a35a;display:flex;align-items:center;gap:7px">🔓 Modo Administrador ativo</span><button onclick="localStorage.removeItem(\'cv_admin_session\');location.reload()" style="padding:3px 11px;background:rgba(196,163,90,.15);color:#d4b86a;border:1px solid rgba(196,163,90,.3);border-radius:6px;font-family:Outfit,sans-serif;font-size:11px;cursor:pointer;">Sair</button>';
+    document.querySelector('.hdr').insertAdjacentElement('afterend', bar);
+  }
+});
+function openAdminModal() {
+  if (isAdmin()) { localStorage.removeItem(ADMIN_KEY); location.reload(); }
+}
+</script>
+</body>
+</html>

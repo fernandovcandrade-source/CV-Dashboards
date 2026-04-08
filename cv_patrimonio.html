@@ -57,7 +57,7 @@ body{font-family:'Outfit',sans-serif;background:var(--off);color:var(--g9);min-h
 .comment-area[contenteditable="true"]{background:var(--off);padding:14px 16px;border:1.5px dashed var(--gold-bd);cursor:text;color:var(--g9);}
 .comment-area[contenteditable="true"]:focus{border-color:var(--gold);background:var(--white);}
 .comment-area:empty::before{content:attr(data-placeholder);color:var(--g4);pointer-events:none;font-style:italic;}
-#htmlTooltip{display:none;position:absolute;pointer-events:none;z-index:50;width:280px;background:#0c1528;border:1px solid rgba(196,163,90,.3);border-radius:12px;box-shadow:0 8px 28px rgba(12,21,40,.4);overflow:hidden;}
+#htmlTooltip{display:none;position:fixed;pointer-events:auto;z-index:50;width:280px;background:#0c1528;border:1px solid rgba(196,163,90,.3);border-radius:12px;box-shadow:0 8px 28px rgba(12,21,40,.4);overflow:hidden;}
 .tt-head{padding:10px 14px 8px;border-bottom:1px solid rgba(255,255,255,.08);}
 .tt-date{font-family:'DM Serif Display',serif;font-size:14px;color:#c4a35a;margin-bottom:6px;}
 .tt-vals{font-size:12px;color:rgba(255,255,255,.85);line-height:1.75;}
@@ -521,24 +521,23 @@ function renderChart(data){
       }
     }
   });
-  // Tooltip: esconde com delay generoso para dar tempo de clicar nos botões
-  let _ttHideTimer = null;
-  function scheduleTTHide() {
-    _ttHideTimer = setTimeout(() => {
-      const tt = document.getElementById('htmlTooltip');
-      if (tt && !tt.matches(':hover')) tt.style.display = 'none';
-    }, 600);
+  // Tooltip hide: usa flags para saber se mouse está no canvas ou no tooltip
+  let _overCanvas = false, _overTooltip = false;
+  function maybeHideTT() {
+    setTimeout(() => {
+      if (!_overCanvas && !_overTooltip) {
+        const tt = document.getElementById('htmlTooltip');
+        if (tt) tt.style.display = 'none';
+      }
+    }, 120);
   }
-  function cancelTTHide() {
-    if (_ttHideTimer) { clearTimeout(_ttHideTimer); _ttHideTimer = null; }
-  }
-  ctx.canvas.addEventListener('mouseleave', scheduleTTHide);
+  ctx.canvas.addEventListener('mouseenter', () => { _overCanvas = true; });
+  ctx.canvas.addEventListener('mouseleave', () => { _overCanvas = false; maybeHideTT(); });
   const ttFixed = document.getElementById('htmlTooltip');
   if (ttFixed) {
-    ttFixed.addEventListener('mouseenter', cancelTTHide);
-    ttFixed.addEventListener('mouseleave', scheduleTTHide);
-    // pointer-events always on so buttons are clickable
     ttFixed.style.pointerEvents = 'auto';
+    ttFixed.addEventListener('mouseenter', () => { _overTooltip = true; });
+    ttFixed.addEventListener('mouseleave', () => { _overTooltip = false; maybeHideTT(); });
   }
   // Click on canvas bar opens add-event modal with date pre-filled
   ctx.canvas.addEventListener('click', (e) => {
@@ -1210,9 +1209,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </script>
 <!-- TOOLTIP PATRIMÔNIO — fixed position, body-level -->
-<div id="htmlTooltip" style="display:none;position:fixed;z-index:9999;width:280px;
-  background:#0c1528;border:1px solid rgba(196,163,90,.3);border-radius:12px;
-  box-shadow:0 8px 28px rgba(12,21,40,.4);overflow:hidden;pointer-events:none;">
+<div id="htmlTooltip" style="display:none;position:fixed;z-index:9999;width:280px;background:#0c1528;border:1px solid rgba(196,163,90,.3);border-radius:12px;box-shadow:0 8px 28px rgba(12,21,40,.4);overflow:hidden;pointer-events:auto;">
   <div class="tt-head"><div class="tt-date" id="ttDate"></div><div class="tt-vals" id="ttVals"></div></div>
   <div class="tt-evs" id="ttEvs"><div class="tt-evs-lbl">Eventos</div><div class="tt-evs-list" id="ttEvsList"></div></div>
   <div class="tt-footer" style="pointer-events:auto">

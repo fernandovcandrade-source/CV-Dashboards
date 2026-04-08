@@ -283,12 +283,16 @@ body{font-family:'Outfit',sans-serif;background:var(--off);color:var(--g9);min-h
 <script>
 // Admin helpers — definidos no topo para garantir disponibilidade
 var ADMIN_KEY = 'cv_admin_session';
-function isAdmin() { return localStorage.getItem(ADMIN_KEY) === 'true'; }
+function isAdmin() {
+  const val = localStorage.getItem(ADMIN_KEY);
+  return val === 'true' || val === true;
+}
 function requireAdmin() { if(!isAdmin()){ showAdminToast(); return false; } return true; }
 function showAdminToast(){
   const t=document.createElement('div');
   t.style.cssText='position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#0c1528;color:#fff;padding:12px 22px;border-radius:10px;font-family:Outfit,sans-serif;font-size:13px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.3);border:1px solid rgba(196,163,90,.3);display:flex;align-items:center;gap:10px;';
-  t.innerHTML='<span style="font-size:16px">🔒</span><span>Apenas administradores podem editar. Faça login com duplo clique no logo.</span>';
+  const stored = localStorage.getItem(ADMIN_KEY);
+  t.innerHTML='<span style="font-size:16px">🔒</span><span>Acesso restrito a administradores. Faça duplo clique no logo CV para logar. (estado: '+stored+')</span>';
   document.body.appendChild(t); setTimeout(()=>t.remove(),4000);
 }
 
@@ -517,16 +521,24 @@ function renderChart(data){
       }
     }
   });
-  // Hide tooltip on canvas leave (with small delay for tooltip hover)
-  ctx.canvas.addEventListener('mouseleave', () => {
-    setTimeout(() => {
+  // Tooltip: esconde com delay generoso para dar tempo de clicar nos botões
+  let _ttHideTimer = null;
+  function scheduleTTHide() {
+    _ttHideTimer = setTimeout(() => {
       const tt = document.getElementById('htmlTooltip');
       if (tt && !tt.matches(':hover')) tt.style.display = 'none';
-    }, 150);
-  });
+    }, 600);
+  }
+  function cancelTTHide() {
+    if (_ttHideTimer) { clearTimeout(_ttHideTimer); _ttHideTimer = null; }
+  }
+  ctx.canvas.addEventListener('mouseleave', scheduleTTHide);
   const ttFixed = document.getElementById('htmlTooltip');
   if (ttFixed) {
-    ttFixed.addEventListener('mouseleave', () => { ttFixed.style.display = 'none'; });
+    ttFixed.addEventListener('mouseenter', cancelTTHide);
+    ttFixed.addEventListener('mouseleave', scheduleTTHide);
+    // pointer-events always on so buttons are clickable
+    ttFixed.style.pointerEvents = 'auto';
   }
   // Click on canvas bar opens add-event modal with date pre-filled
   ctx.canvas.addEventListener('click', (e) => {

@@ -473,7 +473,11 @@ function renderChart(data){
   const ttEvsList=document.getElementById('ttEvsList');
 
   function externalTooltip({chart,tooltip}){
-    if(tooltip.opacity===0){ttEl.style.display='none';return;}
+    if(tooltip.opacity===0){
+      // Não esconde se o mouse estiver sobre o tooltip
+      if(typeof _overTooltip!=='undefined'&&_overTooltip) return;
+      ttEl.style.display='none';return;
+    }
     const idx=tooltip.dataPoints?.[0]?.dataIndex;
     if(idx===undefined) return;
     const d=data[idx];

@@ -486,14 +486,11 @@ function renderChart(data){
     const allEvs=getEventos();
     const evs=allEvs.filter(e=>fmtLabel(e.date)===d.label||e.date===d.label);
     if(evs.length){
+      // Só exibe eventos — edição/exclusão via clique na barra
       ttEvsList.innerHTML=evs.map(e=>{
-        const ri=allEvs.findIndex(ev=>ev.date===e.date&&ev.label===e.label&&ev.desc===e.desc);
-        const adminBtns=isAdmin()?`<span style="display:inline-flex;gap:3px;margin-left:8px;vertical-align:middle">
-          <button onclick="editEvento(${ri})" style="padding:1px 6px;font-size:10px;background:rgba(196,163,90,.2);color:#c4a35a;border:1px solid rgba(196,163,90,.3);border-radius:4px;cursor:pointer">✏️</button>
-          <button onclick="deleteEvento(${ri})" style="padding:1px 6px;font-size:10px;background:rgba(192,57,43,.2);color:#e74c3c;border:1px solid rgba(192,57,43,.3);border-radius:4px;cursor:pointer">🗑</button>
-        </span>`:'';
-        return `<div style="margin-bottom:5px">${ICONE[e.type]||'⚪'} <strong style="color:rgba(255,255,255,.9)">${e.label}</strong>${adminBtns}${e.desc?`<br><span style="font-size:10.5px;color:rgba(255,255,255,.5);padding-left:18px">${e.desc}</span>`:''}</div>`;
+        return `<div style="margin-bottom:4px">${ICONE[e.type]||'⚪'} <strong style="color:rgba(255,255,255,.9)">${e.label}</strong>${e.desc?`<br><span style="font-size:10.5px;color:rgba(255,255,255,.5);padding-left:18px">${e.desc}</span>`:''}</div>`;
       }).join('');
+      if(isAdmin()) ttEvsList.innerHTML += `<div style="font-size:10px;color:rgba(196,163,90,.5);margin-top:6px">✏️ Clique na barra para editar</div>`;
       ttEvs.style.display='block';
     }else{ttEvs.style.display='none';}
     // Fixed positioning: convert canvas-relative coords to viewport coords
@@ -547,7 +544,86 @@ function getEventos(){
 }
 function saveEventos(evs){localStorage.setItem('cv_patri_eventos',JSON.stringify(evs));}
 function openModal(){if(!isAdmin()){showAdminToast();return;}['evDate','evLabel','evDesc'].forEach(id=>document.getElementById(id).value='');document.getElementById('evType').value='other';document.getElementById('modalOv').classList.add('open');document.getElementById('evDate').focus();}
-function openModalForDate(){if(!isAdmin()){showAdminToast();return;}document.getElementById('evDate').value=S.hoverLabel||'';document.getElementById('evLabel').value='';document.getElementById('evDesc').value='';document.getElementById('evType').value='other';document.getElementById('modalOv').classList.add('open');document.getElementById('evLabel').focus();}
+function openModalForDate(){
+  if(!isAdmin()){showAdminToast();return;}
+  const lbl = S.hoverLabel||'';
+  const allEvs = getEventos();
+  const existing = allEvs.filter(e=>fmtLabel(e.date)===lbl||e.date===lbl);
+
+  // Se já existem eventos neste mês, mostra modal de gestão antes
+  if(existing.length){
+    openManageEventsModal(lbl, existing, allEvs);
+    return;
+  }
+  // Caso contrário abre direto para adicionar
+  document.getElementById('evDate').value=lbl;
+  document.getElementById('evLabel').value='';
+  document.getElementById('evDesc').value='';
+  document.getElementById('evType').value='other';
+  document.getElementById('modalOv').dataset.ei='-1';
+  document.getElementById('modalOv').classList.add('open');
+  document.getElementById('evLabel').focus();
+}
+
+function openManageEventsModal(lbl, existing, allEvs){
+  const ICONE={dist:'💛',brp:'🔴',off:'🔵',on:'🟤',other:'⚪'};
+  let listHtml = existing.map(e=>{
+    const ri = allEvs.findIndex(ev=>ev.date===e.date&&ev.label===e.label&&ev.desc===e.desc);
+    return `<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:10px;background:var(--off);border-radius:8px;margin-bottom:8px">
+      <div style="flex:1">
+        <div style="font-weight:600;font-size:13px">${ICONE[e.type]||'⚪'} ${e.label}</div>
+        ${e.desc?`<div style="font-size:11.5px;color:var(--g4);margin-top:2px">${e.desc}</div>`:''}
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;margin-top:2px">
+        <button onclick="closeManageModal();editEvento(${ri})" style="padding:4px 10px;font-size:12px;background:var(--gold-bg);color:var(--gold2);border:1px solid var(--gold-bd);border-radius:6px;cursor:pointer;font-family:Outfit,sans-serif">✏️ Editar</button>
+        <button onclick="deleteEvento(${ri});refreshManageModal('${lbl}')" style="padding:4px 10px;font-size:12px;background:rgba(192,57,43,.1);color:var(--red);border:1px solid rgba(192,57,43,.25);border-radius:6px;cursor:pointer;font-family:Outfit,sans-serif">🗑 Excluir</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  let modal = document.getElementById('manageEvOv');
+  if(!modal){
+    modal = document.createElement('div');
+    modal.id = 'manageEvOv';
+    modal.className = 'modal-ov';
+    modal.onclick = e=>{ if(e.target===modal) closeManageModal(); };
+    document.body.appendChild(modal);
+  }
+  modal.innerHTML = `<div class="modal-box" style="max-width:460px">
+    <div class="modal-head">
+      <div class="modal-ttl">Eventos — ${lbl}</div>
+      <button class="btn-x" onclick="closeManageModal()">✕</button>
+    </div>
+    <div class="modal-body" id="manageEvList">${listHtml}</div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeManageModal()">Fechar</button>
+      <button class="btn-ok" onclick="closeManageModal();addNewEventForDate('${lbl}')">+ Novo Evento</button>
+    </div>
+  </div>`;
+  modal.classList.add('open');
+}
+
+function refreshManageModal(lbl){
+  const allEvs = getEventos();
+  const existing = allEvs.filter(e=>fmtLabel(e.date)===lbl||e.date===lbl);
+  if(!existing.length){ closeManageModal(); return; }
+  openManageEventsModal(lbl, existing, allEvs);
+}
+
+function closeManageModal(){
+  const m = document.getElementById('manageEvOv');
+  if(m) m.classList.remove('open');
+}
+
+function addNewEventForDate(lbl){
+  document.getElementById('evDate').value=lbl;
+  document.getElementById('evLabel').value='';
+  document.getElementById('evDesc').value='';
+  document.getElementById('evType').value='other';
+  document.getElementById('modalOv').dataset.ei='-1';
+  document.getElementById('modalOv').classList.add('open');
+  document.getElementById('evLabel').focus();
+}
 function closeModal(){document.getElementById('modalOv').classList.remove('open');}
 function closeBg(e){if(e.target.id==='modalOv')closeModal();}
 function addEvento(){

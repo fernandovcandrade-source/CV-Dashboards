@@ -473,11 +473,7 @@ function renderChart(data){
   const ttEvsList=document.getElementById('ttEvsList');
 
   function externalTooltip({chart,tooltip}){
-    if(tooltip.opacity===0){
-      // Não esconde se o mouse estiver sobre o tooltip
-      if(typeof _overTooltip!=='undefined'&&_overTooltip) return;
-      ttEl.style.display='none';return;
-    }
+    if(tooltip.opacity===0){ttEl.style.display='none';return;}
     const idx=tooltip.dataPoints?.[0]?.dataIndex;
     if(idx===undefined) return;
     const d=data[idx];
@@ -518,97 +514,23 @@ function renderChart(data){
       {type:'line',label:'Total',data:totalD,borderColor:'#c4a35a',borderWidth:2.5,pointBackgroundColor:'#c4a35a',pointRadius:data.length<=30?3:1,pointHoverRadius:6,tension:.35,fill:false,order:1}
     ]},
     options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
-      plugins:{legend:{position:'top',align:'end',labels:{font:{family:'Outfit',size:12},padding:18,usePointStyle:true}},tooltip:{enabled:false,external:function(){}}},
+      plugins:{legend:{position:'top',align:'end',labels:{font:{family:'Outfit',size:12},padding:18,usePointStyle:true}},tooltip:{enabled:false,external:externalTooltip}},
       scales:{
         x:{stacked:true,grid:{display:false},ticks:{font:{family:'DM Mono',size:10},color:'#8b95aa',maxRotation:data.length>22?45:0,autoSkip:data.length>35}},
         y:{stacked:true,grid:{color:'rgba(0,0,0,.04)',drawTicks:false},border:{display:false},ticks:{font:{family:'DM Mono',size:10.5},color:'#8b95aa',callback:v=>v>=1e6?`R$${(v/1e6).toFixed(0)}M`:v>=1e3?`R$${(v/1e3).toFixed(0)}k`:fmtR(v)}}
       }
     }
   });
-  // CLICK na barra: abre painel lateral com dados + eventos
+  // CLICK na barra: define label selecionado e abre modal de evento (igual ao Oikos)
   ctx.canvas.addEventListener('click', (e) => {
     const pts = S.chart.getElementsAtEventForMode(e, 'nearest', {intersect:true}, false);
     if (!pts.length) return;
     const idx = pts[0].index;
-    const d   = data[idx];
-    S.hoverLabel = d.label;
-    showBarPanel(d);
+    S.hoverLabel = data[idx].label;
+    openModalForDate();
   });
 }
 
-// Painel lateral fixo — abre ao clicar numa barra
-function showBarPanel(d) {
-  const ICONE={dist:'💛',brp:'🔴',off:'🔵',on:'🟤',other:'⚪'};
-  const allEvs = getEventos();
-  const evs = allEvs.filter(e=>fmtLabel(e.date)===d.label||e.date===d.label);
-  const adminAdd = isAdmin() ? `<button onclick="openModalForDate()" style="width:100%;margin-top:10px;padding:8px;background:rgba(196,163,90,.15);color:#c4a35a;border:1px solid rgba(196,163,90,.3);border-radius:6px;font-family:Outfit,sans-serif;font-size:12px;cursor:pointer">+ Adicionar evento neste mês</button>` : '';
-
-  let evsHtml = '';
-  if (evs.length) {
-    evsHtml = '<div style="margin-top:14px;border-top:1px solid rgba(255,255,255,.1);padding-top:12px">';
-    evsHtml += '<div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:8px">Eventos</div>';
-    evsHtml += evs.map(e => {
-      const ri = allEvs.findIndex(ev=>ev.date===e.date&&ev.label===e.label&&ev.desc===e.desc);
-      const adminBtns = isAdmin() ? `<div style="display:flex;gap:4px;margin-top:4px">
-        <button onclick="editEvento(${ri})" style="padding:2px 8px;font-size:11px;background:rgba(196,163,90,.2);color:#c4a35a;border:1px solid rgba(196,163,90,.3);border-radius:4px;cursor:pointer;font-family:Outfit,sans-serif">✏️ Editar</button>
-        <button onclick="deleteEvento(${ri});closeBarPanel()" style="padding:2px 8px;font-size:11px;background:rgba(192,57,43,.2);color:#e74c3c;border:1px solid rgba(192,57,43,.3);border-radius:4px;cursor:pointer;font-family:Outfit,sans-serif">🗑 Excluir</button>
-      </div>` : '';
-      return `<div style="margin-bottom:10px;padding:8px;background:rgba(255,255,255,.05);border-radius:6px">
-        <div>${ICONE[e.type]||'⚪'} <strong style="color:rgba(255,255,255,.9)">${e.label}</strong></div>
-        ${e.desc?`<div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:3px">${e.desc}</div>`:''}
-        ${adminBtns}
-      </div>`;
-    }).join('');
-    evsHtml += '</div>';
-  }
-
-  const html = `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-      <div style="font-family:'DM Serif Display',serif;font-size:16px;color:#c4a35a">${d.label}</div>
-      <button onclick="closeBarPanel()" style="background:rgba(255,255,255,.1);border:none;color:#fff;width:24px;height:24px;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center">✕</button>
-    </div>
-    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08)">
-      <span style="color:rgba(255,255,255,.5)">Total</span>
-      <span style="font-family:'DM Mono',monospace;color:#c4a35a">${fmtR(d.total)}</span>
-    </div>
-    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08)">
-      <span style="color:rgba(255,255,255,.5)">Onshore</span>
-      <span style="font-family:'DM Mono',monospace">${fmtR(d.onshore)} <span style="font-size:10px;color:rgba(255,255,255,.4)">(${d.total>0?((d.onshore/d.total)*100).toFixed(1):0}%)</span></span>
-    </div>
-    ${d.offshore>0?`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08)">
-      <span style="color:rgba(255,255,255,.5)">Offshore</span>
-      <span style="font-family:'DM Mono',monospace;color:#2980b9">${fmtR(d.offshore)} <span style="font-size:10px;color:rgba(255,255,255,.4)">(${((d.offshore/d.total)*100).toFixed(1)}%)</span></span>
-    </div>`:''}
-    ${evsHtml}
-    ${adminAdd}`;
-
-  let panel = document.getElementById('barPanel');
-  if (!panel) {
-    panel = document.createElement('div');
-    panel.id = 'barPanel';
-    panel.style.cssText = 'position:fixed;top:50%;right:24px;transform:translateY(-50%);width:300px;background:#0c1528;border:1px solid rgba(196,163,90,.3);border-radius:14px;padding:20px;z-index:9999;box-shadow:0 12px 40px rgba(0,0,0,.5);color:#fff;font-family:Outfit,sans-serif;font-size:13px;max-height:80vh;overflow-y:auto;';
-    document.body.appendChild(panel);
-  }
-  panel.innerHTML = html;
-  panel.style.display = 'block';
-
-  // Fechar ao clicar fora
-  setTimeout(() => {
-    document.addEventListener('click', closePanelOutside, true);
-  }, 50);
-}
-
-function closePanelOutside(e) {
-  const panel = document.getElementById('barPanel');
-  if (panel && !panel.contains(e.target)) {
-    closeBarPanel();
-  }
-}
-function closeBarPanel() {
-  const panel = document.getElementById('barPanel');
-  if (panel) panel.style.display = 'none';
-  document.removeEventListener('click', closePanelOutside, true);
-}
 
 function dateVal(s){
   const MO={jan:1,fev:2,mar:3,abr:4,mai:5,jun:6,jul:7,ago:8,set:9,out:10,nov:11,dez:12,feb:2,apr:4,may:5,aug:8,sep:9,oct:10,dec:12};

@@ -191,10 +191,18 @@ body {
 .btn-save.show { display: inline-flex; }
 
 .save-msg {
-  font-size: 11px;
-  color: var(--gold);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--green);
   opacity: 0;
-  transition: opacity .4s;
+  transition: opacity .3s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(39,174,96,.12);
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(39,174,96,.25);
 }
 .save-msg.show { opacity: 1; }
 
@@ -764,6 +772,14 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('destContent').innerHTML = saved;
   }
 
+  // Auto-salva ao clicar fora da área de edição
+  document.getElementById('destContent').addEventListener('blur', () => {
+    if (editing) {
+      // Pequeno delay para não conflitar com clique no botão Salvar
+      setTimeout(() => { if (editing) saveContent(); }, 200);
+    }
+  });
+
   // Aplica links nos cards
   Object.entries(LINKS).forEach(([id, url]) => {
     const el = document.getElementById(id);
@@ -813,17 +829,28 @@ function toggleEdit() {
 
 function saveContent() {
   const el = document.getElementById('destContent');
-  localStorage.setItem('cv_destaques', el.innerHTML);
+
+  // Salva no localStorage
+  try {
+    localStorage.setItem('cv_destaques', el.innerHTML);
+  } catch(e) {
+    showToast('⚠️ Erro ao salvar. Verifique o armazenamento do navegador.');
+    return;
+  }
+
   editing = false;
   el.contentEditable = 'false';
   document.getElementById('btnEdit').style.display = 'inline-flex';
   document.getElementById('btnSave').classList.remove('show');
   document.getElementById('fmtToolbar').classList.remove('show');
 
-  // Feedback visual
+  // Feedback inline
   const msg = document.getElementById('saveMsg');
   msg.classList.add('show');
-  setTimeout(() => msg.classList.remove('show'), 2500);
+  setTimeout(() => msg.classList.remove('show'), 3000);
+
+  // Toast de confirmação visível
+  showToast('✅ Conteúdo salvo com sucesso!');
 }
 
 // Salva automaticamente ao sair da edição (Esc)

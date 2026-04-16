@@ -165,14 +165,12 @@ body{font-family:'Outfit',sans-serif;background:var(--off);color:var(--g9);min-h
     <div class="card-h">
       <span class="card-t">Comentário Analítico — Recebimentos</span>
       <div style="display:flex;align-items:center;gap:10px">
-        <div class="ai-generating" id="aiSpinnerRec"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div><span>IA gerando...</span></div>
-        <button class="btn-edit" id="btnRegenRec" onclick="gerarIA('rec')" style="display:none">✨ Regenerar</button>
-        <span class="save-msg" id="saveMsgRec">✓ Salvo</span>
-        <button class="btn-edit" id="btnEditRec" onclick="toggleEdit('rec')">✏️ Editar</button>
-        <button class="btn-save" id="btnSaveRec" onclick="saveComment('rec')">💾 Salvar</button>
+        <span class="save-msg" id="sheetStatusRec" style="font-size:11px;font-weight:600;transition:opacity .4s;"></span>
+        <button class="btn-edit" id="btnRefreshRec" onclick="loadSheetRec(true)">🔄 Atualizar</button>
       </div>
     </div>
-    <div class="card-b"><div class="comment-area" id="commentRec" contenteditable="false" data-placeholder="Análise automática dos recebimentos aparecerá aqui..."></div></div>
+    <div class="card-b"><div class="comment-area" id="commentRec" contenteditable="false" data-placeholder="Carregando conteúdo do Google Sheets..."></div></div>
+    <div class="card-note"><span>📊</span><span id="sheetRefRec">Conteúdo carregado do Google Sheets · Célula B9</span></div>
   </div>
 
   <!-- 1.1 Composição dos Recebimentos -->
@@ -302,14 +300,12 @@ body{font-family:'Outfit',sans-serif;background:var(--off);color:var(--g9);min-h
     <div class="card-h">
       <span class="card-t">Comentário Analítico — Inadimplência</span>
       <div style="display:flex;align-items:center;gap:10px">
-        <div class="ai-generating" id="aiSpinnerInad"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div><span>IA gerando...</span></div>
-        <button class="btn-edit" id="btnRegenInad" onclick="gerarIA('inad')" style="display:none">✨ Regenerar</button>
-        <span class="save-msg" id="saveMsgInad">✓ Salvo</span>
-        <button class="btn-edit" id="btnEditInad" onclick="toggleEdit('inad')">✏️ Editar</button>
-        <button class="btn-save" id="btnSaveInad" onclick="saveComment('inad')">💾 Salvar</button>
+        <span class="save-msg" id="sheetStatusInad" style="font-size:11px;font-weight:600;transition:opacity .4s;"></span>
+        <button class="btn-edit" id="btnRefreshInad" onclick="loadSheetInad(true)">🔄 Atualizar</button>
       </div>
     </div>
-    <div class="card-b"><div class="comment-area" id="commentInad" contenteditable="false" data-placeholder="Análise automática da inadimplência aparecerá aqui..."></div></div>
+    <div class="card-b"><div class="comment-area" id="commentInad" contenteditable="false" data-placeholder="Carregando conteúdo do Google Sheets..."></div></div>
+    <div class="card-note"><span>📊</span><span id="sheetRefInad">Conteúdo carregado do Google Sheets · Célula B10</span></div>
   </div>
 
   <!-- 2.1 Inadimplência Mensal -->
@@ -539,10 +535,6 @@ function last12YM() {
 // LOAD ALL
 // ================================================================
 document.addEventListener('DOMContentLoaded', () => {
-  ['rec','inad'].forEach(k => {
-    const s=localStorage.getItem('cv_comment_'+k);
-    if(s) document.getElementById('comment'+k.charAt(0).toUpperCase()+k.slice(1)).innerHTML=s;
-  });
   loadAll();
 });
 
@@ -559,10 +551,8 @@ async function loadAll() {
     initPeriods();
     renderAll();
     document.getElementById('lastUpdate').textContent=new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-    if(!localStorage.getItem('cv_comment_rec'))  gerarIA('rec');
-    else document.getElementById('btnRegenRec').style.display='inline-flex';
-    if(!localStorage.getItem('cv_comment_inad')) gerarIA('inad');
-    else document.getElementById('btnRegenInad').style.display='inline-flex';
+    loadSheetRec();
+    loadSheetInad();
   } catch(e) { console.error(e); }
   finally {
     btn.disabled=false; btn.classList.remove('spin');
@@ -887,7 +877,17 @@ function renderKPIs() {
   }
   const lastEsta = inadEsta[inadEsta.length-1];
   const lastFaze = inadFaze[inadFaze.length-1];
-  const totalInadAcum = inadEsta.reduce((s,d)=>s+d.inad,0) + inadFaze.reduce((s,d)=>s+d.inad,0);
+  const totalInadAcum = (() => {
+    const acumData = extractAcum('consolidado', 'valor');
+    if (!acumData.length) return 0;
+    const last = acumData[acumData.length - 1];
+    return last.faixas.reduce((s, v) => s + v, 0);
+  })();
+  const inadAcumLabel = (() => {
+    const acumData = extractAcum('consolidado', 'valor');
+    if (!acumData.length) return '';
+    return fmtLabel(acumData[acumData.length - 1].ym);
+  })();
 
   // Roll Rate Após 12 Meses — idx 3 da coluna de vals
   const rollEstaData = extractRoll('esta');
@@ -912,7 +912,7 @@ function renderKPIs() {
     '<div class="kpi ko">' +
       '<div class="kpi-lbl">Inadimplência Acumulada</div>' +
       '<div class="kpi-val" style="color:var(--orange)">' + fmtR(totalInadAcum) + '</div>' +
-      '<div class="kpi-sub">Soma histórica ESTA + FAZE</div>' +
+      '<div class="kpi-sub">' + (inadAcumLabel ? inadAcumLabel + ' · ' : '') + 'Soma ESTA + FAZE</div>' +
     '</div>' +
     '<div class="kpi kgr">' +
       '<div class="kpi-lbl">Roll Rate 12m · ESTA</div>' +
@@ -940,7 +940,7 @@ function setAggFut(btn){
   document.querySelectorAll('#aggSegFut .seg-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');ST.fut.agg=btn.dataset.agg;
   const w=document.getElementById('futPeriodWrap');
   w.style.display=btn.dataset.agg==='month'?'flex':'none';
-  if(btn.dataset.agg==='month'){const {start,end}=last12YM();document.getElementById('futStart').value=start;document.getElementById('futEnd').value=end;}
+  if(btn.dataset.agg==='month'){document.getElementById('futStart').value='';document.getElementById('futEnd').value='';}
   renderFut();
 }
 function setEmpInad(btn){document.querySelectorAll('#empSegInad .seg-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');ST.inad.emp=btn.dataset.emp;renderInad();}
@@ -950,67 +950,110 @@ function setVisInad(btn){document.querySelectorAll('#visSegInad .seg-btn').forEa
 // COMENTÁRIOS EDITÁVEIS
 // ================================================================
 const editState={rec:false,inad:false};
-function toggleEdit(k){
-  if (!requireAdmin()) return;
-  editState[k]=!editState[k];
-  const id=k==='rec'?'Rec':'Inad';
-  const el=document.getElementById('comment'+id);
-  const be=document.getElementById('btnEdit'+id);
-  const bs=document.getElementById('btnSave'+id);
-  el.contentEditable=editState[k]?'true':'false';
-  be.style.display=editState[k]?'none':'inline-flex';
-  bs.classList.toggle('show',editState[k]);
-  if(editState[k])el.focus();
+// ── Google Sheets — Comentário Inadimplência (célula B10) ────────
+async function loadSheetInad(manual = false) {
+  const el     = document.getElementById('commentInad');
+  const status = document.getElementById('sheetStatusInad');
+  const ref    = document.getElementById('sheetRefInad');
+  const btn    = document.getElementById('btnRefreshInad');
+
+  if (btn)    { btn.disabled = true; btn.textContent = '⏳ Carregando...'; }
+  if (status) { status.style.opacity = '1'; status.style.color = 'var(--g4)'; status.textContent = 'Buscando dados...'; }
+
+  try {
+    const res = await fetch(SHEET_CSV_REC + '&t=' + Date.now());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const csv = await res.text();
+    const records = parseCSVFullRec(csv);
+    const val = ((records[9] || [])[1] || '').trim(); // linha 10 (índice 9), coluna B (índice 1)
+
+    console.log('[Sheets Inad] Valor extraído da célula B10:', val);
+
+    el.innerHTML = val ? textToHtmlRec(val) : '<em style="color:var(--g4)">Célula B10 está vazia na planilha.</em>';
+
+    const now = new Date().toLocaleString('pt-BR');
+    if (ref)    ref.textContent = `📊 Google Sheets · Célula B10 · Atualizado às ${now}`;
+    if (status) { status.style.color = 'var(--green)'; status.textContent = '✓ Atualizado'; setTimeout(() => { status.style.opacity = '0'; }, 3000); }
+    if (manual) { const t=document.createElement('div');t.style.cssText='position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#0c1528;color:#fff;padding:12px 22px;border-radius:10px;font-family:Outfit,sans-serif;font-size:13px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.25);border:1px solid rgba(196,163,90,.3);';t.textContent='✅ Comentário atualizado do Google Sheets!';document.body.appendChild(t);setTimeout(()=>t.remove(),3500); }
+
+  } catch (err) {
+    console.error('Sheets Inad fetch error:', err);
+    el.innerHTML = '<em style="color:var(--red)">⚠ Não foi possível carregar o conteúdo. Verifique a conexão ou a planilha.</em>';
+    if (status) { status.style.color = 'var(--red)'; status.textContent = '✕ Erro ao carregar'; }
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🔄 Atualizar'; }
+  }
 }
-function saveComment(k){
-  const id=k==='rec'?'Rec':'Inad';
-  const el=document.getElementById('comment'+id);
-  localStorage.setItem('cv_comment_'+k,el.innerHTML);
-  editState[k]=false;el.contentEditable='false';
-  document.getElementById('btnEdit'+id).style.display='inline-flex';
-  document.getElementById('btnSave'+id).classList.remove('show');
-  const m=document.getElementById('saveMsg'+id);m.classList.add('show');setTimeout(()=>m.classList.remove('show'),2500);
+
+// ── Google Sheets — Comentário Recebimentos (célula B9) ──────────
+const SHEET_CSV_REC = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTUbW0FiOjtRgrI0eQliP1hRnPYZpDmd-AR4Wee895GY7cLhsI_NLOgrfALpkT0PUe9PIDTzfIkhE1g/pub?gid=1364679478&single=true&output=csv';
+
+function parseCSVFullRec(csv) {
+  const records = [];
+  let row = [], cell = '', inQ = false, i = 0;
+  while (i < csv.length) {
+    const ch = csv[i];
+    if (inQ) {
+      if (ch === '"') {
+        if (csv[i+1] === '"') { cell += '"'; i += 2; continue; }
+        else { inQ = false; i++; continue; }
+      }
+      cell += ch; i++; continue;
+    }
+    if (ch === '"')                        { inQ = true; i++; continue; }
+    if (ch === ',')                        { row.push(cell); cell = ''; i++; continue; }
+    if (ch === '\r' && csv[i+1] === '\n') { row.push(cell); records.push(row); row = []; cell = ''; i+=2; continue; }
+    if (ch === '\n')                       { row.push(cell); records.push(row); row = []; cell = ''; i++; continue; }
+    cell += ch; i++;
+  }
+  if (cell || row.length) { row.push(cell); records.push(row); }
+  return records;
 }
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(editState.rec)saveComment('rec');if(editState.inad)saveComment('inad');}});
+
+function textToHtmlRec(text) {
+  return text
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n/g, '<br>');
+}
+
+async function loadSheetRec(manual = false) {
+  const el     = document.getElementById('commentRec');
+  const status = document.getElementById('sheetStatusRec');
+  const ref    = document.getElementById('sheetRefRec');
+  const btn    = document.getElementById('btnRefreshRec');
+
+  if (btn)    { btn.disabled = true; btn.textContent = '⏳ Carregando...'; }
+  if (status) { status.style.opacity = '1'; status.style.color = 'var(--g4)'; status.textContent = 'Buscando dados...'; }
+
+  try {
+    const res = await fetch(SHEET_CSV_REC + '&t=' + Date.now());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const csv = await res.text();
+    const records = parseCSVFullRec(csv);
+    const val = ((records[8] || [])[1] || '').trim(); // linha 9 (índice 8), coluna B (índice 1)
+
+    console.log('[Sheets Rec] Valor extraído da célula B9:', val);
+
+    el.innerHTML = val ? textToHtmlRec(val) : '<em style="color:var(--g4)">Célula B9 está vazia na planilha.</em>';
+
+    const now = new Date().toLocaleString('pt-BR');
+    if (ref)    ref.textContent = `📊 Google Sheets · Célula B9 · Atualizado às ${now}`;
+    if (status) { status.style.color = 'var(--green)'; status.textContent = '✓ Atualizado'; setTimeout(() => { status.style.opacity = '0'; }, 3000); }
+    if (manual) { const t=document.createElement('div');t.style.cssText='position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#0c1528;color:#fff;padding:12px 22px;border-radius:10px;font-family:Outfit,sans-serif;font-size:13px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.25);border:1px solid rgba(196,163,90,.3);';t.textContent='✅ Comentário atualizado do Google Sheets!';document.body.appendChild(t);setTimeout(()=>t.remove(),3500); }
+
+  } catch (err) {
+    console.error('Sheets Rec fetch error:', err);
+    el.innerHTML = '<em style="color:var(--red)">⚠ Não foi possível carregar o conteúdo. Verifique a conexão ou a planilha.</em>';
+    if (status) { status.style.color = 'var(--red)'; status.textContent = '✕ Erro ao carregar'; }
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🔄 Atualizar'; }
+  }
+}
 
 // ================================================================
 // COMENTÁRIO IA
 // ================================================================
-async function gerarIA(k) {
-  const id=k==='rec'?'Rec':'Inad';
-  const spinner=document.getElementById('aiSpinner'+id);
-  const btnRegen=document.getElementById('btnRegen'+id);
-  const area=document.getElementById('comment'+id);
-  spinner.classList.add('show'); btnRegen.style.display='none'; area.style.opacity='0.4';
-
-  let prompt='';
-  if(k==='rec'){
-    const {start,end}=last12YM();
-    const data=extractComp('consolidado').filter(d=>d.ym>=start&&d.ym<=end);
-    if(!data.length){area.innerHTML='<em style="color:var(--g4)">Dados insuficientes.</em>';spinner.classList.remove('show');btnRegen.style.display='inline-flex';area.style.opacity='1';return;}
-    const last=data[data.length-1];
-    const totalRec=data.reduce((s,d)=>s+d.total,0);
-    const totalPrev=data.reduce((s,d)=>s+d.prev,0);
-    const ating=totalPrev>0?((totalRec/totalPrev)*100).toFixed(1):'—';
-    prompt=`Você é analista financeiro de loteamentos imobiliários. Analise os recebimentos consolidados (ESTA + FAZE) dos últimos 12 meses e escreva um comentário executivo conciso (3-4 frases) em português. Destaque: atingimento do previsto (${ating}%), composição do último mês (Escopo: ${fmtPct(last.escPct)}, Atraso: ${fmtPct(last.atrPct)}, Futuras: ${fmtPct(last.futPct)}), e algum ponto de atenção. Total recebido: ${fmtR(totalRec)}, previsto: ${fmtR(totalPrev)}. Responda apenas com o texto, sem títulos.`;
-  } else {
-    const {start,end}=last12YM();
-    const data=extractInad('consolidado').filter(d=>d.ym>=start&&d.ym<=end);
-    if(!data.length){area.innerHTML='<em style="color:var(--g4)">Dados insuficientes.</em>';spinner.classList.remove('show');btnRegen.style.display='inline-flex';area.style.opacity='1';return;}
-    const last=data[data.length-1];
-    const avg=data.reduce((s,d)=>s+d.inadPct,0)/data.length;
-    prompt=`Você é analista financeiro de loteamentos imobiliários. Analise a inadimplência consolidada (ESTA + FAZE) dos últimos 12 meses e escreva um comentário executivo conciso (3-4 frases) em português. Último mês: inadimplência ${fmtPct(last.inadPct)} (${fmtR(last.inad)}), recebido ${fmtPct(last.recPct)}. Média do período: ${fmtPct(avg)}. Comente a tendência e pontos de atenção. Responda apenas com o texto, sem títulos.`;
-  }
-
-  try {
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
-    const d=await r.json();
-    const text=d.content?.map(b=>b.text||'').join('').trim();
-    if(text){area.innerHTML=text;localStorage.setItem('cv_comment_'+k,area.innerHTML);}
-  } catch(e){area.innerHTML='<em style="color:var(--g4)">Não foi possível gerar o comentário. Use ✏️ Editar para escrever manualmente.</em>';}
-  finally{spinner.classList.remove('show');btnRegen.style.display='inline-flex';area.style.opacity='1';}
-}
-
 // ================================================================
 // INADIMPLÊNCIA ACUMULADA POR FAIXA
 // ================================================================

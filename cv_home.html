@@ -194,17 +194,11 @@ body {
   font-size: 12px;
   font-weight: 600;
   color: var(--green);
-  opacity: 0;
   transition: opacity .3s;
   display: flex;
   align-items: center;
   gap: 4px;
-  background: rgba(39,174,96,.12);
-  padding: 4px 10px;
-  border-radius: 6px;
-  border: 1px solid rgba(39,174,96,.25);
 }
-.save-msg.show { opacity: 1; }
 
 .destaques-body { padding: 24px; min-height: 160px; position: relative; }
 
@@ -577,20 +571,11 @@ body {
         Destaques, Pontos de Atenção & Resumo Executivo
       </div>
       <div class="destaques-actions">
-        <span class="save-msg" id="saveMsg">✓ Salvo</span>
-        <button class="btn-edit" id="btnEdit" onclick="toggleEdit()">✏️ Editar</button>
-        <button class="btn-save" id="btnSave" onclick="saveContent()">💾 Salvar</button>
+        <span class="save-msg" id="sheetStatus"></span>
+        <button class="btn-edit" id="btnRefresh" onclick="loadDestaques(true)" title="Recarregar do Google Sheets">
+          🔄 Atualizar
+        </button>
       </div>
-    </div>
-
-    <!-- Barra de formatação (visível ao editar) -->
-    <div class="fmt-toolbar" id="fmtToolbar">
-      <button class="fmt-btn" onclick="fmt('bold')"><b>N</b></button>
-      <button class="fmt-btn" onclick="fmt('italic')"><i>I</i></button>
-      <button class="fmt-btn" onclick="fmtList()">☰ Lista</button>
-      <button class="fmt-btn" onclick="fmtTag('atencao')">⚠ Atenção</button>
-      <button class="fmt-btn" onclick="fmtTag('ok')">✓ OK</button>
-      <button class="fmt-btn" onclick="clearFmt()" style="margin-left:8px;color:var(--red)">✕ Limpar tudo</button>
     </div>
 
     <div class="destaques-body">
@@ -598,11 +583,11 @@ body {
         class="destaques-content"
         id="destContent"
         contenteditable="false"
-        data-placeholder="Clique em 'Editar' para adicionar os destaques do mês, pontos de atenção e observações relevantes..."
+        data-placeholder="Carregando conteúdo do Google Sheets..."
       ></div>
       <div class="base-ref">
-        <span>💾</span>
-        <span>O conteúdo é salvo automaticamente neste navegador. Para preservar entre dispositivos, copie o texto antes de sair.</span>
+        <span>📊</span>
+        <span id="sheetRef">Conteúdo carregado do Google Sheets · Célula B2</span>
       </div>
     </div>
   </div>
@@ -766,19 +751,8 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 
-  // Carrega conteúdo salvo dos destaques
-  const saved = localStorage.getItem('cv_destaques');
-  if (saved) {
-    document.getElementById('destContent').innerHTML = saved;
-  }
-
-  // Auto-salva ao clicar fora da área de edição
-  document.getElementById('destContent').addEventListener('blur', () => {
-    if (editing) {
-      // Pequeno delay para não conflitar com clique no botão Salvar
-      setTimeout(() => { if (editing) saveContent(); }, 200);
-    }
-  });
+  // Carrega destaques do Google Sheets
+  loadDestaques();
 
   // Aplica links nos cards
   Object.entries(LINKS).forEach(([id, url]) => {
@@ -800,93 +774,87 @@ function navTo(e, cardId) {
   window.open(url, '_blank');
 }
 
-// ── Edição dos destaques ─────────────────────────────────────────
-let editing = false;
+// ── Google Sheets — Destaques (célula B2) ────────────────────────
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTUbW0FiOjtRgrI0eQliP1hRnPYZpDmd-AR4Wee895GY7cLhsI_NLOgrfALpkT0PUe9PIDTzfIkhE1g/pub?gid=1364679478&single=true&output=csv';
 
-function toggleEdit() {
-  editing = !editing;
-  const el    = document.getElementById('destContent');
-  const btnE  = document.getElementById('btnEdit');
-  const btnS  = document.getElementById('btnSave');
-  const tbar  = document.getElementById('fmtToolbar');
-
-  el.contentEditable = editing ? 'true' : 'false';
-  btnE.style.display  = editing ? 'none'  : 'inline-flex';
-  btnS.classList.toggle('show', editing);
-  tbar.classList.toggle('show', editing);
-
-  if (editing) {
-    el.focus();
-    // Coloca cursor no final
-    const range = document.createRange();
-    const sel = window.getSelection();
-    range.selectNodeContents(el);
-    range.collapse(false);
-    sel.removeAllRanges();
-    sel.addRange(range);
+function parseCSVFull(csv) {
+  // Parser CSV completo — lida com campos entre aspas, quebras de linha internas e "" escapados
+  const records = [];
+  let row = [], cell = '', inQ = false, i = 0;
+  while (i < csv.length) {
+    const ch = csv[i];
+    if (inQ) {
+      if (ch === '"') {
+        if (csv[i+1] === '"') { cell += '"'; i += 2; continue; } // "" → "
+        else { inQ = false; i++; continue; }                      // fecha aspas
+      }
+      cell += ch; i++; continue;
+    }
+    if (ch === '"')                         { inQ = true; i++; continue; }
+    if (ch === ',')                         { row.push(cell); cell = ''; i++; continue; }
+    if (ch === '\r' && csv[i+1] === '\n')  { row.push(cell); records.push(row); row = []; cell = ''; i+=2; continue; }
+    if (ch === '\n')                        { row.push(cell); records.push(row); row = []; cell = ''; i++; continue; }
+    cell += ch; i++;
   }
+  if (cell || row.length) { row.push(cell); records.push(row); }
+  return records;
 }
 
-function saveContent() {
-  const el = document.getElementById('destContent');
+function parseCSVCell(csv, row, col) {
+  const records = parseCSVFull(csv);
+  const r = records[row];
+  if (!r) return '';
+  return (r[col] || '').trim();
+}
 
-  // Salva no localStorage
+function textToHtml(text) {
+  // Converte quebras de linha em <br> e preserva negrito com **texto**
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n/g, '<br>');
+}
+
+async function loadDestaques(manual = false) {
+  const el     = document.getElementById('destContent');
+  const status = document.getElementById('sheetStatus');
+  const ref    = document.getElementById('sheetRef');
+  const btn    = document.getElementById('btnRefresh');
+
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Carregando...'; }
+  if (status) { status.style.opacity = '1'; status.style.color = 'var(--g4)'; status.textContent = 'Buscando dados...'; }
+
   try {
-    localStorage.setItem('cv_destaques', el.innerHTML);
-  } catch(e) {
-    showToast('⚠️ Erro ao salvar. Verifique o armazenamento do navegador.');
-    return;
-  }
+    const res  = await fetch(SHEET_CSV_URL + '&t=' + Date.now());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const csv  = await res.text();
+    const val  = parseCSVCell(csv, 1, 1); // linha 2 (índice 1), coluna B (índice 1)
+    console.log('[Sheets] CSV recebido (primeiros 300 chars):', csv.slice(0, 300));
+    console.log('[Sheets] Valor extraído da célula B2:', val);
 
-  editing = false;
-  el.contentEditable = 'false';
-  document.getElementById('btnEdit').style.display = 'inline-flex';
-  document.getElementById('btnSave').classList.remove('show');
-  document.getElementById('fmtToolbar').classList.remove('show');
+    if (!val) {
+      el.innerHTML = '<em style="color:var(--g4)">Célula B2 está vazia na planilha.</em>';
+    } else {
+      el.innerHTML = textToHtml(val);
+    }
 
-  // Feedback inline
-  const msg = document.getElementById('saveMsg');
-  msg.classList.add('show');
-  setTimeout(() => msg.classList.remove('show'), 3000);
+    const now = new Date().toLocaleString('pt-BR');
+    if (ref) ref.textContent = `📊 Google Sheets · Célula B2 · Atualizado às ${now}`;
+    if (status) { status.style.color = 'var(--green)'; status.textContent = '✓ Atualizado'; setTimeout(() => { if (status) status.style.opacity = '0'; }, 3000); }
+    if (manual) showToast('✅ Conteúdo atualizado do Google Sheets!');
 
-  // Toast de confirmação visível
-  showToast('✅ Conteúdo salvo com sucesso!');
-}
-
-// Salva automaticamente ao sair da edição (Esc)
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && editing) saveContent();
-});
-
-// ── Formatação do texto ──────────────────────────────────────────
-function fmt(cmd) { document.execCommand(cmd, false, null); }
-
-function fmtList() {
-  document.execCommand('insertUnorderedList', false, null);
-}
-
-function fmtTag(tipo) {
-  const sel = window.getSelection();
-  if (!sel.rangeCount) return;
-  const range = sel.getRangeAt(0);
-  const span = document.createElement('span');
-  span.className = `tag-${tipo}`;
-  span.textContent = tipo === 'atencao' ? '⚠ Atenção' : '✓ OK';
-  range.insertNode(span);
-  // Move cursor para após o span
-  range.setStartAfter(span);
-  range.setEndAfter(span);
-  sel.removeAllRanges();
-  sel.addRange(range);
-  document.getElementById('destContent').dispatchEvent(new Event('input'));
-}
-
-function clearFmt() {
-  if (confirm('Limpar todo o conteúdo dos destaques?')) {
-    document.getElementById('destContent').innerHTML = '';
-    localStorage.removeItem('cv_destaques');
+  } catch (err) {
+    console.error('Sheets fetch error:', err);
+    el.innerHTML = '<em style="color:var(--red)">⚠ Não foi possível carregar o conteúdo. Verifique a conexão ou a planilha.</em>';
+    if (status) { status.style.color = 'var(--red)'; status.textContent = '✕ Erro ao carregar'; }
+    if (ref) ref.textContent = '⚠ Falha ao buscar dados do Google Sheets';
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🔄 Atualizar'; }
   }
 }
+
 
 // ── Data editável nos cards ──────────────────────────────────────
 function editDate(key, e) {

@@ -49,8 +49,7 @@ body { font-family: 'Outfit', sans-serif; background: var(--off); color: var(--g
 .btn-save { display: none; align-items: center; gap: 6px; padding: 6px 14px; background: var(--gold); color: var(--navy); border: none; border-radius: 8px; font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; transition: var(--tr); }
 .btn-save:hover { background: var(--gold2); }
 .btn-save.show { display: inline-flex; }
-.save-msg { font-size: 11px; color: var(--gold); opacity: 0; transition: opacity .4s; }
-.save-msg.show { opacity: 1; }
+.save-msg { font-size: 11px; font-weight: 600; color: var(--green); transition: opacity .4s; }
 
 /* TOOLBAR */
 .fmt-bar { display: none; gap: 4px; padding: 10px 24px 0; flex-wrap: wrap; border-bottom: 1px solid var(--g1); padding-bottom: 10px; }
@@ -139,23 +138,12 @@ body { font-family: 'Outfit', sans-serif; background: var(--off); color: var(--g
     <div class="editor-head">
       <div class="editor-title">
         <div class="editor-dot"></div>
-        Registro Livre
+        Comentários
       </div>
       <div class="editor-actions">
-        <span class="save-msg" id="saveMsg">✓ Salvo</span>
-        <button class="btn-edit" id="btnEdit" onclick="toggleEdit()">✏️ Editar</button>
-        <button class="btn-save" id="btnSave" onclick="saveContent()">💾 Salvar</button>
+        <span class="save-msg" id="sheetStatus"></span>
+        <button class="btn-edit" id="btnRefresh" onclick="loadComentarios(true)" title="Recarregar do Google Sheets">🔄 Atualizar</button>
       </div>
-    </div>
-
-    <div class="fmt-bar" id="fmtBar">
-      <button class="fmt-btn" onclick="fmt('bold')"><b>Negrito</b></button>
-      <button class="fmt-btn" onclick="fmt('italic')"><i>Itálico</i></button>
-      <button class="fmt-btn" onclick="fmt('insertUnorderedList')">☰ Lista</button>
-      <button class="fmt-btn" onclick="insertSep()">── Separador</button>
-      <button class="fmt-btn" onclick="insertTag('at')">⚠ Atenção</button>
-      <button class="fmt-btn" onclick="insertTag('ok')">✓ OK</button>
-      <button class="fmt-btn" onclick="insertTag('pen')">⏳ Pendente</button>
     </div>
 
     <div class="editor-body">
@@ -163,13 +151,13 @@ body { font-family: 'Outfit', sans-serif; background: var(--off); color: var(--g
         class="editor-content"
         id="editorContent"
         contenteditable="false"
-        data-placeholder="Clique em '✏️ Editar' para começar a escrever. Use este espaço para registrar observações do período, pendências, decisões tomadas, recados para a próxima reunião ou qualquer outro assunto relevante..."
+        data-placeholder="Carregando conteúdo do Google Sheets..."
       ></div>
     </div>
 
     <div class="editor-footer">
-      <span>💾</span>
-      <span class="editor-footer-note" id="lastSaved">Nenhum conteúdo salvo ainda.</span>
+      <span>📊</span>
+      <span class="editor-footer-note" id="sheetRef">Conteúdo carregado do Google Sheets · Célula B5</span>
     </div>
   </div>
 
@@ -187,80 +175,88 @@ body { font-family: 'Outfit', sans-serif; background: var(--off); color: var(--g
 </main>
 
 <script>
-// ── Estado ───────────────────────────────────────────────────────
-let editing = false;
+// ── Google Sheets — Comentários (célula B5) ──────────────────────
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTUbW0FiOjtRgrI0eQliP1hRnPYZpDmd-AR4Wee895GY7cLhsI_NLOgrfALpkT0PUe9PIDTzfIkhE1g/pub?gid=1364679478&single=true&output=csv';
 
-// ── Inicialização ────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  // Carrega conteúdo salvo
-  const saved = localStorage.getItem('cv_outros_content');
-  const ts    = localStorage.getItem('cv_outros_ts');
-  if (saved) {
-    document.getElementById('editorContent').innerHTML = saved;
-    document.getElementById('lastSaved').textContent =
-      'Último salvamento: ' + ts;
+function parseCSVFull(csv) {
+  const records = [];
+  let row = [], cell = '', inQ = false, i = 0;
+  while (i < csv.length) {
+    const ch = csv[i];
+    if (inQ) {
+      if (ch === '"') {
+        if (csv[i+1] === '"') { cell += '"'; i += 2; continue; }
+        else { inQ = false; i++; continue; }
+      }
+      cell += ch; i++; continue;
+    }
+    if (ch === '"')                        { inQ = true; i++; continue; }
+    if (ch === ',')                        { row.push(cell); cell = ''; i++; continue; }
+    if (ch === '\r' && csv[i+1] === '\n') { row.push(cell); records.push(row); row = []; cell = ''; i+=2; continue; }
+    if (ch === '\n')                       { row.push(cell); records.push(row); row = []; cell = ''; i++; continue; }
+    cell += ch; i++;
   }
+  if (cell || row.length) { row.push(cell); records.push(row); }
+  return records;
+}
+
+function parseCSVCell(csv, row, col) {
+  const records = parseCSVFull(csv);
+  return ((records[row] || [])[col] || '').trim();
+}
+
+function textToHtml(text) {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n/g, '<br>');
+}
+
+async function loadComentarios(manual = false) {
+  const el     = document.getElementById('editorContent');
+  const status = document.getElementById('sheetStatus');
+  const ref    = document.getElementById('sheetRef');
+  const btn    = document.getElementById('btnRefresh');
+
+  if (btn)    { btn.disabled = true; btn.textContent = '⏳ Carregando...'; }
+  if (status) { status.style.opacity = '1'; status.style.color = 'var(--g4)'; status.textContent = 'Buscando dados...'; }
+
+  try {
+    const res = await fetch(SHEET_CSV_URL + '&t=' + Date.now());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const csv = await res.text();
+    const val = parseCSVCell(csv, 4, 1); // linha 5 (índice 4), coluna B (índice 1)
+
+    console.log('[Sheets] CSV recebido (primeiros 300 chars):', csv.slice(0, 300));
+    console.log('[Sheets] Valor extraído da célula B5:', val);
+
+    if (!val) {
+      el.innerHTML = '<em style="color:var(--g4)">Célula B5 está vazia na planilha.</em>';
+    } else {
+      el.innerHTML = textToHtml(val);
+    }
+
+    const now = new Date().toLocaleString('pt-BR');
+    if (ref)    ref.textContent = `📊 Google Sheets · Célula B5 · Atualizado às ${now}`;
+    if (status) { status.style.color = 'var(--green)'; status.textContent = '✓ Atualizado'; setTimeout(() => { if (status) status.style.opacity = '0'; }, 3000); }
+    if (manual) showToast('✅ Conteúdo atualizado do Google Sheets!');
+
+  } catch (err) {
+    console.error('Sheets fetch error:', err);
+    el.innerHTML = '<em style="color:var(--red)">⚠ Não foi possível carregar o conteúdo. Verifique a conexão ou a planilha.</em>';
+    if (status) { status.style.color = 'var(--red)'; status.textContent = '✕ Erro ao carregar'; }
+    if (ref)    ref.textContent = '⚠ Falha ao buscar dados do Google Sheets';
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🔄 Atualizar'; }
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadComentarios();
   renderHistorico();
 });
-
-// ── Edição ───────────────────────────────────────────────────────
-function toggleEdit() {
-  if (!requireAdmin()) return;
-  editing = !editing;
-  const el   = document.getElementById('editorContent');
-  const btnE = document.getElementById('btnEdit');
-  const btnS = document.getElementById('btnSave');
-  const bar  = document.getElementById('fmtBar');
-
-  el.contentEditable = editing ? 'true' : 'false';
-  btnE.style.display = editing ? 'none' : 'inline-flex';
-  btnS.classList.toggle('show', editing);
-  bar.classList.toggle('show', editing);
-
-  if (editing) {
-    el.focus();
-    const r = document.createRange(), s = window.getSelection();
-    r.selectNodeContents(el); r.collapse(false);
-    s.removeAllRanges(); s.addRange(r);
-  }
-}
-
-function saveContent() {
-  const el = document.getElementById('editorContent');
-  const ts = new Date().toLocaleString('pt-BR');
-  localStorage.setItem('cv_outros_content', el.innerHTML);
-  localStorage.setItem('cv_outros_ts', ts);
-
-  editing = false;
-  el.contentEditable = 'false';
-  document.getElementById('btnEdit').style.display = 'inline-flex';
-  document.getElementById('btnSave').classList.remove('show');
-  document.getElementById('fmtBar').classList.remove('show');
-  document.getElementById('lastSaved').textContent = 'Último salvamento: ' + ts;
-
-  const msg = document.getElementById('saveMsg');
-  msg.classList.add('show');
-  setTimeout(() => msg.classList.remove('show'), 2500);
-}
-
-// Salva com Esc
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && editing) saveContent();
-});
-
-// ── Formatação ───────────────────────────────────────────────────
-function fmt(cmd) { document.execCommand(cmd, false, null); }
-
-function insertSep() {
-  document.execCommand('insertHTML', false, '<hr>');
-}
-
-function insertTag(tipo) {
-  const labels = { at: '⚠ Atenção', ok: '✓ OK', pen: '⏳ Pendente' };
-  document.execCommand('insertHTML', false,
-    `<span class="tag-${tipo}">${labels[tipo]}</span>&nbsp;`
-  );
-}
 
 // ── Histórico ────────────────────────────────────────────────────
 function arquivar() {

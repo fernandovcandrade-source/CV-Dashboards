@@ -611,7 +611,7 @@ body {
         </div>
       </div>
       <div class="card-footer">
-        <span class="card-date" id="date-status" onclick="editDate('status',event)" title="Clique para editar">Atualizar base</span>
+        <span class="card-date" id="date-status" >Atualizar base</span>
         <div class="card-arrow">→</div>
       </div>
     </a>
@@ -630,7 +630,7 @@ body {
         </div>
       </div>
       <div class="card-footer">
-        <span class="card-date" id="date-fluxo" onclick="editDate('fluxo',event)" title="Clique para editar">Atualizar base</span>
+        <span class="card-date" id="date-fluxo" >Atualizar base</span>
         <div class="card-arrow">→</div>
       </div>
     </a>
@@ -649,7 +649,7 @@ body {
         </div>
       </div>
       <div class="card-footer">
-        <span class="card-date" id="date-rec" onclick="editDate('rec',event)" title="Clique para editar">Atualizar base</span>
+        <span class="card-date" id="date-rec" >Atualizar base</span>
         <div class="card-arrow">→</div>
       </div>
     </a>
@@ -668,7 +668,7 @@ body {
         </div>
       </div>
       <div class="card-footer">
-        <span class="card-date" id="date-pat" onclick="editDate('pat',event)" title="Clique para editar">Atualizar base</span>
+        <span class="card-date" id="date-pat" >Atualizar base</span>
         <div class="card-arrow">→</div>
       </div>
     </a>
@@ -687,7 +687,7 @@ body {
         </div>
       </div>
       <div class="card-footer">
-        <span class="card-date" id="date-infra" onclick="editDate('infra',event)" title="Clique para editar">Atualizar base</span>
+        <span class="card-date" id="date-infra" >Atualizar base</span>
         <div class="card-arrow">→</div>
       </div>
     </a>
@@ -707,7 +707,7 @@ body {
         </div>
       </div>
       <div class="card-footer">
-        <span class="card-date" id="date-outros" onclick="editDate('outros',event)" title="Clique para editar">Definir base</span>
+        <span class="card-date" id="date-outros" >Definir base</span>
         <div class="card-arrow">→</div>
       </div>
     </a>
@@ -743,16 +743,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('footerNote').textContent =
     `Gerado em ${hoje.toLocaleDateString('pt-BR')}`;
 
-  // Carrega datas salvas de cada card
-  ['status','fluxo','rec','pat','infra','outros'].forEach(key => {
-    const saved = localStorage.getItem('cv_date_'+key);
-    const el = document.getElementById('date-'+key);
-    if (el) el.textContent = saved || 'Definir base';
-  });
-
-
-  // Carrega destaques do Google Sheets
+  // Carrega datas dos cards do Google Sheets
   loadDestaques();
+  loadCardDates();
 
   // Aplica links nos cards
   Object.entries(LINKS).forEach(([id, url]) => {
@@ -774,7 +767,24 @@ function navTo(e, cardId) {
   window.open(url, '_blank');
 }
 
-// ── Google Sheets — Destaques (célula B2) ────────────────────────
+// ── Google Sheets — Data Base dos Cards (célula B19) ─────────────
+async function loadCardDates() {
+  try {
+    const res = await fetch(SHEET_CSV_URL + '&t=' + Date.now());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const csv = await res.text();
+    const records = parseCSVFull(csv);
+    const val = ((records[18] || [])[1] || '').trim(); // linha 19 (índice 18), coluna B (índice 1)
+    console.log('[Sheets] Data base cards B19:', val);
+    ['status','fluxo','rec','pat','infra','outros'].forEach(key => {
+      const el = document.getElementById('date-'+key);
+      if (el) el.textContent = val || '—';
+    });
+  } catch (err) {
+    console.error('Sheets card dates error:', err);
+  }
+}
+
 const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTUbW0FiOjtRgrI0eQliP1hRnPYZpDmd-AR4Wee895GY7cLhsI_NLOgrfALpkT0PUe9PIDTzfIkhE1g/pub?gid=1364679478&single=true&output=csv';
 
 function parseCSVFull(csv) {
@@ -853,34 +863,6 @@ async function loadDestaques(manual = false) {
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = '🔄 Atualizar'; }
   }
-}
-
-
-// ── Data editável nos cards ──────────────────────────────────────
-function editDate(key, e) {
-  e.preventDefault(); e.stopPropagation();
-  if (!isAdmin()) { showToast('🔒 Apenas administradores podem editar. Faça login com duplo clique no logo.'); return; }
-  const el = document.getElementById('date-'+key);
-  // Torna o span editável inline (sem prompt)
-  el.contentEditable = 'true';
-  el.style.outline = '1px dashed rgba(196,163,90,.6)';
-  el.style.borderRadius = '3px';
-  el.style.padding = '1px 4px';
-  el.focus();
-  // Seleciona tudo
-  const range = document.createRange();
-  range.selectNodeContents(el);
-  window.getSelection().removeAllRanges();
-  window.getSelection().addRange(range);
-  el.onblur = () => {
-    el.contentEditable = 'false';
-    el.style.outline = '';
-    el.style.padding = '';
-    const txt = el.textContent.trim() || 'Definir base';
-    el.textContent = txt;
-    localStorage.setItem('cv_date_'+key, txt);
-  };
-  el.onkeydown = ev => { if (ev.key === 'Enter') { ev.preventDefault(); el.blur(); } };
 }
 
 
